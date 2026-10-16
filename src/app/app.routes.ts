@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
-import { connexionGuard } from './guards/acces.guard';
+import { connexionGuard, roleGuard } from './guards/acces.guard';
 import { AccesRefuse } from './pages/acces-refuse/acces-refuse';
 import { Catalogue } from './pages/catalogue/catalogue';
 import { Connexion } from './pages/connexion/connexion';
 import { FicheMateriel } from './pages/fiche-materiel/fiche-materiel';
+import { MesReservations } from './pages/mes-reservations/mes-reservations';
 import { PageIntrouvable } from './pages/page-introuvable/page-introuvable';
 
 export const routes: Routes = [
@@ -21,6 +22,12 @@ export const routes: Routes = [
     component: FicheMateriel,
     canActivate: [connexionGuard],
     title: 'Fiche matériel - Campus Matériel'
+  },
+  {
+    path: 'mes-reservations',
+    component: MesReservations,
+    canActivate: [roleGuard('student')],
+    title: 'Mes réservations - Campus Matériel'
   },
   { path: 'acces-refuse', component: AccesRefuse, title: 'Accès refusé - Campus Matériel' },
   // Toujours en dernier

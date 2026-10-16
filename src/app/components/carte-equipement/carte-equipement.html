@@ -10,4 +10,18 @@
 
   <p class="description">{{ equipement().description }}</p>
   <p class="localisation">Localisation : {{ equipement().localisation }}</p>
+
+  @if (peutReserver()) {
+    <div class="carte-bas">
+      @if (reserveParMoi()) {
+        <p class="note">Vous avez réservé cet équipement.</p>
+      } @else if (disponible()) {
+        <button type="button" (click)="reserver.emit(equipement().id)">
+          Réserver <span class="visuellement-cache">{{ equipement().nom }}</span>
+        </button>
+      } @else {
+        <p class="note">Déjà réservé par un autre étudiant.</p>
+      }
+    </div>
+  }
 </article>
