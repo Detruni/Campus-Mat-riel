@@ -1,5 +1,5 @@
 import {
-  Component, ElementRef, OnDestroy, afterNextRender, effect, inject, input, output, signal, viewChild
+  Component, ElementRef, OnDestroy, afterNextRender, effect, inject, input, output, signal, untracked, viewChild
 } from '@angular/core';
 import { AmbianceService } from '../../services/ambiance.service';
 import { ElementCarrousel, SceneCarrousel } from './scene-carrousel';
@@ -27,6 +27,7 @@ export class Carrousel3d implements OnDestroy {
   readonly ouvrir = output<number>();
 
   private readonly zoneScene = viewChild.required<ElementRef<HTMLDivElement>>('scene');
+  private readonly zoneCapsule = viewChild.required<ElementRef<HTMLDivElement>>('capsule');
   private readonly ambiance = inject(AmbianceService);
   private scene?: SceneCarrousel;
 
@@ -51,11 +52,15 @@ export class Carrousel3d implements OnDestroy {
     });
 
     // La liste a changé (filtre, réservation...) : on redessine les pochettes
+    // (untracked : un simple changement d'indice ne doit pas reconstruire les pochettes,
+    // sinon elles sautent directement à leur place au lieu de glisser)
     effect(() => {
       const elements = this.elements();
-      const indice = Math.min(this.indice(), Math.max(elements.length - 1, 0));
-      if (indice !== this.indice()) this.indiceChange.emit(indice);
-      this.scene?.afficher(elements, indice);
+      untracked(() => {
+        const indice = Math.min(this.indice(), Math.max(elements.length - 1, 0));
+        if (indice !== this.indice()) this.indiceChange.emit(indice);
+        this.scene?.afficher(elements, indice);
+      });
     });
 
     // L'indice a changé : la scène glisse jusqu'à la bonne pochette et le fond change de couleur
@@ -64,11 +69,25 @@ export class Carrousel3d implements OnDestroy {
       this.scene?.allerA(indice);
       const element = this.elements()[indice];
       if (element) this.ambiance.definir(element.fond);
+      this.animerCapsule();
     });
   }
 
   ngOnDestroy(): void {
     this.scene?.detruire();
+  }
+
+  // Le texte de la capsule glisse et apparaît à chaque changement d'élément
+  private animerCapsule(): void {
+    const capsule = this.zoneCapsule().nativeElement;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    capsule.animate(
+      [
+        { opacity: 0, transform: 'translateY(8px)' },
+        { opacity: 1, transform: 'translateY(0)' }
+      ],
+      { duration: 320, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' }
+    );
   }
 
   aller(indice: number): void {
@@ -97,15 +116,28 @@ export class Carrousel3d implements OnDestroy {
     }
   }
 
-  // Seul le défilement horizontal (pavé tactile) change d'élément : la page reste défilable
+  // Molette (verticale ou horizontale) : le carrousel défile comme sur un site de pochettes d'albums.
+  // Sur mobile la page est empilée, on laisse donc la molette faire défiler la page.
   private dernierDefilement = 0;
   molette(e: WheelEvent): void {
-    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || Math.abs(e.deltaX) < 20) return;
+    if (matchMedia('(max-width: 760px)').matches) return;
+
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    // deltaMode 1 = défilement en lignes (certaines souris) : on le convertit en pixels
+    const pixels = e.deltaMode === 1 ? delta * 40 : delta;
+
+    if (this.scene) {
+      if (this.scene.defiler(pixels)) e.preventDefault();
+      return;
+    }
+
+    // Sans 3D : un cran de molette = un élément
+    if (Math.abs(pixels) < 10) return;
     e.preventDefault();
     const maintenant = Date.now();
-    if (maintenant - this.dernierDefilement < 450) return;
+    if (maintenant - this.dernierDefilement < 400) return;
     this.dernierDefilement = maintenant;
-    if (e.deltaX > 0) this.suivant();
+    if (pixels > 0) this.suivant();
     else this.precedent();
   }
 }

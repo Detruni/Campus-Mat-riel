@@ -32,7 +32,8 @@ export interface RappelsCarrousel {
 }
 
 const TAILLE_POCHETTE = 2;
-const ECART = 2.35;
+// Distance entre deux pochettes : assez grande pour qu'elles ne se chevauchent pas
+const ECART = 3.1;
 const ECHELLE_OBJET = 3;
 
 interface Pochette {
@@ -58,6 +59,13 @@ export class SceneCarrousel {
   // Position affichée, qui rejoint l'indice en douceur (c'est elle qui crée l'animation)
   private position = 0;
   private glisse: { x: number; depart: number; deplace: boolean } | null = null;
+  // Défilement à la molette : quantité accumulée et moment du dernier changement d'élément
+  private accumulation = 0;
+  private dernierPas = 0;
+  private minuteurDefilement = 0;
+  // Vitesse de déplacement lissée : sert à pencher les pochettes pendant le mouvement
+  private vitesse = 0;
+  private positionPrecedente = 0;
 
   constructor(private readonly conteneur: HTMLElement, private readonly rappels: RappelsCarrousel) {
     // Lève une erreur si WebGL n'est pas disponible : le composant affiche alors la liste
@@ -95,7 +103,7 @@ export class SceneCarrousel {
     this.scene.add(lumiere);
 
     // La caméra est placée un peu haut : la pochette descend entre les filtres et la capsule
-    this.camera.position.set(0, 0.45, 8);
+    this.camera.position.set(0, 0.4, 8.8);
 
     this.brancherEvenements(canvas);
     this.observateur = new ResizeObserver(() => this.redimensionner());
@@ -116,6 +124,30 @@ export class SceneCarrousel {
     this.allerA(indice, true);
   }
 
+  /**
+   * Défilement à la molette. Un cran de molette (ou un geste suffisant sur un pavé tactile)
+   * fait passer à l'élément suivant ; pendant le geste, les pochettes s'amorcent déjà
+   * un peu dans le sens du défilement.
+   * Renvoie false si on est déjà au bout (la page peut alors défiler normalement).
+   */
+  defiler(delta: number): boolean {
+    const max = this.pochettes.length - 1;
+    if ((delta < 0 && this.indice <= 0) || (delta > 0 && this.indice >= max)) return false;
+
+    this.accumulation += delta;
+    clearTimeout(this.minuteurDefilement);
+    this.minuteurDefilement = window.setTimeout(() => (this.accumulation = 0), 200);
+
+    const maintenant = performance.now();
+    if (Math.abs(this.accumulation) >= 60 && maintenant - this.dernierPas > 220) {
+      this.dernierPas = maintenant;
+      const pas = Math.sign(this.accumulation);
+      this.accumulation = 0;
+      this.rappels.aller(THREE.MathUtils.clamp(this.indice + pas, 0, max));
+    }
+    return true;
+  }
+
   allerA(indice: number, immediat = false): void {
     this.indice = indice;
     if (immediat || this.sansAnimation) this.position = indice;
@@ -123,6 +155,7 @@ export class SceneCarrousel {
 
   detruire(): void {
     this.renderer.setAnimationLoop(null);
+    clearTimeout(this.minuteurDefilement);
     this.observateur.disconnect();
     this.nettoyages.forEach(nettoyer => nettoyer());
     liberer(this.scene);
@@ -194,8 +227,18 @@ export class SceneCarrousel {
 
     // La position rejoint l'indice demandé en ralentissant à l'arrivée
     if (!this.glisse) {
-      this.position += (this.indice - this.position) * Math.min(1, dt * 6);
+      // Le début d'un geste de molette décale déjà légèrement les pochettes
+      const amorce = this.sansAnimation ? 0 : THREE.MathUtils.clamp(this.accumulation / 300, -0.2, 0.2);
+      this.position += (this.indice + amorce - this.position) * Math.min(1, dt * 6);
     }
+
+    // Vitesse du mouvement, lissée pour éviter les à-coups
+    if (dt > 0) {
+      const instantanee = (this.position - this.positionPrecedente) / dt;
+      this.vitesse += (instantanee - this.vitesse) * Math.min(1, dt * 8);
+    }
+    this.positionPrecedente = this.position;
+    const elan = this.sansAnimation ? 0 : THREE.MathUtils.clamp(this.vitesse, -4, 4);
 
     this.pochettes.forEach((pochette, i) => {
       const d = i - this.position;
@@ -203,12 +246,16 @@ export class SceneCarrousel {
       const g = pochette.groupe;
       g.visible = distance < 3.5;
 
-      // Les voisines s'écartent, reculent et tournent vers le centre
-      g.position.x = d * ECART + Math.sign(d) * Math.min(distance, 1) * 0.35;
-      g.position.z = -Math.min(distance, 3) * 1.4;
+      // Les voisines s'écartent, reculent, rapetissent un peu et tournent vers le centre
+      const proximite = Math.min(distance, 1);
+      g.position.x = d * ECART;
+      g.position.z = -Math.min(distance, 3) * 1.6;
       g.position.y = Math.sin(temps * 1.2 + i) * (this.sansAnimation ? 0 : 0.03);
-      g.rotation.y = THREE.MathUtils.clamp(-d * 0.55, -0.9, 0.9);
-      g.rotation.z = pochette.penche * Math.min(distance, 1);
+      g.scale.setScalar(1 - proximite * 0.16);
+      // Pendant le mouvement les pochettes penchent dans le sens du déplacement, comme des cartes qu'on fait glisser
+      g.rotation.y = THREE.MathUtils.clamp(-d * 0.55, -0.9, 0.9) + elan * 0.09;
+      g.rotation.x = Math.abs(elan) * 0.025;
+      g.rotation.z = pochette.penche * proximite - elan * 0.02;
 
       // L'objet du centre tourne doucement sur lui-même
       const auCentre = distance < 0.5;
@@ -289,7 +336,7 @@ export class SceneCarrousel {
     this.camera.aspect = largeur / hauteur;
     // Sur mobile la scène est un bloc à part (sans filtres par-dessus) : pochette centrée
     const mobile = largeur < 760;
-    this.camera.position.set(0, mobile ? 0.05 : 0.45, mobile ? 4.9 : 8);
+    this.camera.position.set(0, mobile ? 0.05 : 0.4, mobile ? 5.2 : 8.8);
     this.camera.updateProjectionMatrix();
   }
 }
