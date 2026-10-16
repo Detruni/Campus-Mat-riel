@@ -1,0 +1,13 @@
+<article class="carte">
+  <div class="carte-haut">
+    <span class="categorie">{{ equipement().categorie }}</span>
+    <app-badge-disponibilite [disponible]="disponible()" />
+  </div>
+
+  <h2 class="carte-titre">
+    <a [routerLink]="['/materiels', equipement().id]">{{ equipement().nom }}</a>
+  </h2>
+
+  <p class="description">{{ equipement().description }}</p>
+  <p class="localisation">Localisation : {{ equipement().localisation }}</p>
+</article>

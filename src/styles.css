@@ -137,3 +137,22 @@ button:disabled {
 .page-message .actions {
   justify-content: center;
 }
+
+/* Champs de formulaire */
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: #fff;
+  color: var(--texte);
+}
