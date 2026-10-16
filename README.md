@@ -34,6 +34,7 @@ Il n'y a pas de serveur : les données sont enregistrées dans le `localStorage`
 | Reactive Forms | Formulaire de création / modification du matériel |
 | RxJS + `toSignal` | Lecture des filtres dans l'URL |
 | `localStorage` | Persistance du catalogue, des réservations et de la session |
+| Three.js (WebGL) | Carrousel 3D du catalogue (objets en 3D), chargé à part avec `@defer` |
 | CSS simple | Mise en forme, sans bibliothèque de composants |
 
 ---
@@ -103,7 +104,7 @@ Les comptes et le catalogue de départ viennent du fichier fourni
 | --- | --- | --- |
 | `/` | Redirige vers `/catalogue`, qui renvoie vers `/login` si personne n'est connecté | Selon la session |
 | `/login` | Choix du compte de démonstration + réinitialisation des données | Public |
-| `/catalogue` | Liste, recherche par nom et filtre par catégorie | Utilisateur connecté |
+| `/catalogue` | Carrousel 3D des équipements, recherche par nom et filtre par catégorie | Utilisateur connecté |
 | `/materiels/:id` | Fiche détaillée (réservation possible pour un étudiant) | Utilisateur connecté |
 | `/mes-reservations` | Réservations de l'étudiant connecté | Étudiant |
 | `/gestion` | Liste de gestion du catalogue (chargée à la demande) | Responsable |
@@ -147,7 +148,10 @@ src/app/
 │   └── acces.guard.ts               connexionGuard et roleGuard('student' | 'manager')
 │
 ├── components/                      Composants réutilisables
-│   ├── carte-equipement/            Carte d'un équipement (input / output)
+│   ├── carrousel-3d/                Carrousel du catalogue (input / output)
+│   │   ├── carrousel-3d.ts          Composant Angular : capsule, boutons, clavier
+│   │   ├── scene-carrousel.ts       Scène Three.js : pochettes, animation, glisser
+│   │   └── modeles-3d.ts            Objets en 3D (ordinateur, projecteur, appareil photo...)
 │   └── badge-disponibilite/         Pastille « Disponible » / « Réservé »
 │
 └── pages/                           Un dossier par page
@@ -221,17 +225,43 @@ réservations actives, la disponibilité ne peut pas être fausse.
 
 ### Communication entre composants
 
-`CarteEquipement` reçoit un équipement avec `input()` et **ne réserve rien elle-même** : quand on
-clique sur « Réserver », elle émet l'id avec `output()`. C'est la page `Catalogue` (le parent) qui
-appelle le service et affiche le message.
+`Carrousel3d` reçoit la liste des équipements et les réservations avec `input()` et **ne réserve
+rien lui-même** : quand on clique sur « Réserver », il émet l'id avec `output()`. C'est la page
+`Catalogue` (le parent) qui appelle le service et affiche le message.
 
 ```html
-<app-carte-equipement
-  [equipement]="equipement"
-  [disponible]="reservations.estDisponible(equipement.id)"
+<app-carrousel-3d
+  [equipements]="equipementsVisibles()"
+  [reserves]="reservations.idsReserves()"
+  [mesReservations]="mesIds()"
+  [peutReserver]="session.estEtudiant()"
   (reserver)="reserver($event)"
 />
 ```
+
+### Le catalogue en carrousel 3D
+
+La page Catalogue présente les équipements dans un carrousel inspiré des pochettes d'albums :
+
+- chaque équipement est un **objet en 3D** (ordinateur portable, vidéoprojecteur, appareil photo,
+  microphone, enceinte) posé devant une pochette à la couleur de sa catégorie, avec une pastille
+  portant son nom et une étiquette « Disponible » ou « Réservé » ;
+- l'équipement du milieu est de face et tourne doucement, les voisins sont inclinés sur les côtés ;
+- le fond change de couleur selon la catégorie de l'équipement affiché ;
+- sous la pochette, une **capsule** affiche le nom, la catégorie, la localisation, la disponibilité
+  et les boutons **Voir la fiche** et **Réserver** (pour les étudiants).
+
+On change d'équipement avec les flèches de la capsule, les flèches gauche / droite du clavier
+(quand le carrousel a le focus), en glissant la souris ou le doigt, ou en cliquant sur une pochette
+voisine. `Entrée` ou un double-clic sur la pochette du milieu ouvre la fiche.
+
+La recherche et le filtre s'appliquent au carrousel. Les objets 3D sont construits avec des formes
+simples dans `modeles-3d.ts` (aucun fichier 3D à télécharger). Grâce à `@defer`, le carrousel et
+Three.js sont téléchargés à part : le reste de l'application ne s'en trouve pas alourdi.
+
+Le canvas 3D est décoratif (`aria-hidden`) : toutes les informations et actions sont de vrais
+textes, liens et boutons dans la capsule, annoncés aux lecteurs d'écran (`aria-live`). Si le
+système demande de réduire les animations, le carrousel change d'équipement sans animation.
 
 ### Formulaire réactif partagé
 
@@ -254,9 +284,9 @@ formulaire** en cas d'erreur.
 
 ## Le trajet d'une réservation
 
-Exemple : Alice clique sur « Réserver » sur la carte de l'ordinateur portable 01.
+Exemple : Alice clique sur « Réserver » dans la capsule du carrousel, sur l'ordinateur portable 01.
 
-1. **Clic** : `CarteEquipement` émet l'id `101` avec son `output` `reserver`.
+1. **Clic** : `Carrousel3d` émet l'id `101` avec son `output` `reserver`.
 2. **Le parent reçoit la demande** : `Catalogue.reserver(101)` appelle `ReservationService.reserver(101)`.
 3. **Contrôles** dans le service :
    - un étudiant est bien connecté ;
@@ -266,7 +296,7 @@ Exemple : Alice clique sur « Réserver » sur la carte de l'ordinateur portable
    est ajoutée au signal des réservations.
 5. **Sauvegarde** : l'`effect()` du service voit le changement et écrit la liste dans le `localStorage`.
 6. **Actualisation des vues** : les `computed` qui dépendent des réservations sont recalculés
-   (`idsReserves`, `mesReservations`). La carte passe en « Réservé », la fiche détaillée et la page
+   (`idsReserves`, `mesReservations`). La pochette et la capsule passent en « Réservé », la fiche détaillée et la page
    « Mes réservations » sont à jour, sans rechargement. Un message de confirmation s'affiche.
 
 L'annulation suit le même chemin : on vérifie que la réservation appartient bien à l'étudiant
@@ -284,10 +314,10 @@ en bas de la page `/login` (ou vider le `localStorage` dans les outils de dével
 | # | Action | Résultat attendu |
 | --- | --- | --- |
 | 1 | Sans être connecté, ouvrir directement `http://localhost:4200/mes-reservations` | La page de connexion s'affiche (l'URL contient `returnUrl=/mes-reservations`) |
-| 2 | Choisir **Alice Martin**, aller dans le **Catalogue** et cliquer sur **Réserver** sous « Ordinateur portable 01 » | Après la connexion, on arrive directement sur « Mes réservations » (la page demandée). Dans le catalogue : message « Réservation enregistrée. », la carte passe en « Réservé » et affiche « Vous avez réservé cet équipement. » |
+| 2 | Choisir **Alice Martin**, aller dans le **Catalogue** et cliquer sur **Réserver** dans la capsule (« 01. ordinateur portable 01 ») | Après la connexion, on arrive directement sur « Mes réservations » (la page demandée). Dans le catalogue : message « Réservation enregistrée. », l'étiquette de la pochette passe à « Réservé » et la capsule affiche « Réservé par vous » |
 | 3 | Ouvrir **Mes réservations**, puis recharger la page (F5) | L'ordinateur portable 01 est listé avec un lien vers sa fiche et un bouton Annuler. Il est toujours là après le rechargement, et Alice est toujours connectée |
 | 4 | **Se déconnecter**, se connecter avec **Yanis Bernard**, ouvrir « Mes réservations » | Aucune réservation : Yanis ne voit pas celle d'Alice |
-| 4 bis | Ouvrir la fiche `/materiels/101` | Pastille « Réservé » et message : l'équipement est déjà réservé par un autre étudiant, pas de bouton Réserver. Dans le catalogue, la carte indique « Déjà réservé par un autre étudiant » |
+| 4 bis | Ouvrir la fiche `/materiels/101` | Pastille « Réservé » et message : l'équipement est déjà réservé par un autre étudiant, pas de bouton Réserver. Dans le catalogue, la capsule indique « Déjà réservé » à la place du bouton Réserver |
 | 5 | Se déconnecter, se connecter avec **Camille Dupont**, aller dans **Gestion**, cliquer sur **Modifier** pour un équipement | Le formulaire est pré-rempli. Vider le nom et cliquer sur Enregistrer : message d'erreur, les autres champs gardent leurs valeurs. Corriger puis enregistrer : retour à la liste avec « … a été modifié. » |
 | 6 | Dans Gestion, cliquer sur **Supprimer** pour « Ordinateur portable 01 » | Suppression refusée avec l'explication : l'équipement est réservé, l'étudiant doit d'abord annuler |
 | 7 | Se reconnecter avec **Alice Martin**, ouvrir « Mes réservations » et cliquer sur **Annuler** | Message « Réservation annulée… », la liste est vide et l'ordinateur 01 est de nouveau « Disponible » dans le catalogue |
@@ -332,7 +362,8 @@ en bas de la page `/login` (ou vider le `localStorage` dans les outils de dével
 - [x] Guards sur les routes privées, page d'accès refusé, page 404
 - [x] Chargement différé de l'espace de gestion
 - [x] Liens actifs dans le menu
-- [x] Communication parent / enfant (`input` / `output`) avec la carte d'équipement
+- [x] Communication parent / enfant (`input` / `output`) avec le carrousel
+- [x] Catalogue présenté en carrousel 3D (Three.js), chargé à la demande avec `@defer`
 - [x] Persistance dans le `localStorage`, données initiales chargées uniquement s'il n'y a rien d'enregistré
 - [x] Messages pour : liste vide, recherche sans résultat, équipement inexistant, accès refusé,
       saisie invalide, équipement déjà réservé, erreur de lecture ou d'écriture du stockage
@@ -365,3 +396,6 @@ champs en erreur signalés avec `aria-invalid`, titre d'onglet différent pour c
 - **Déploiement** : une fois le build mis sur un serveur, celui-ci doit renvoyer `index.html` pour
   toutes les routes, sinon un rechargement sur `/catalogue` par exemple donnera une erreur 404 du serveur.
 - **Pas de tests automatisés** : les vérifications se font avec le scénario ci-dessus.
+- **Carrousel 3D** : il demande un navigateur compatible WebGL et peut être lent sur un ordinateur
+  sans carte graphique. Sans WebGL, la 3D n'est pas affichée mais la capsule (nom, disponibilité,
+  boutons précédent / suivant, Voir la fiche, Réserver) reste utilisable.
