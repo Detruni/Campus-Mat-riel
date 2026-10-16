@@ -3,7 +3,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { Carrousel3d } from '../../components/carrousel-3d/carrousel-3d';
-import { CarteEquipement } from '../../components/carte-equipement/carte-equipement';
 import { CATEGORIES, Categorie } from '../../data/donnees-initiales';
 import { CatalogueService } from '../../services/catalogue.service';
 import { ReservationService } from '../../services/reservation.service';
@@ -12,7 +11,7 @@ import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-catalogue',
-  imports: [CarteEquipement, Carrousel3d],
+  imports: [Carrousel3d],
   templateUrl: './catalogue.html',
   styleUrl: './catalogue.css'
 })
@@ -39,14 +38,9 @@ export class Catalogue {
     })),
     { initialValue: '' }
   );
-  // Affichage choisi, gardé dans l'URL comme les filtres (?vue=liste)
-  readonly vue = toSignal(
-    this.route.queryParamMap.pipe(map(p => (p.get('vue') === 'liste' ? 'liste' : 'carrousel'))),
-    { initialValue: 'carrousel' }
-  );
   readonly message = signal<Resultat | null>(null);
 
-  // Ids des équipements réservés par l'étudiant connecté (pour le carrousel)
+  // Ids des équipements réservés par l'étudiant connecté
   readonly mesIds = computed(() => new Set(this.reservations.mesReservations().map(r => r.equipementId)));
 
   // La liste affichée est recalculée dès que la recherche, le filtre ou le catalogue changent
@@ -69,7 +63,7 @@ export class Catalogue {
     return compteurs;
   });
 
-  changerFiltres(filtres: { q?: string | null; categorie?: string | null; vue?: string | null }): void {
+  changerFiltres(filtres: { q?: string | null; categorie?: string | null }): void {
     // null retire le paramètre de l'URL ; replaceUrl évite une entrée d'historique à chaque lettre
     this.router.navigate([], {
       relativeTo: this.route,
@@ -79,18 +73,11 @@ export class Catalogue {
     });
   }
 
-  changerVue(vue: 'carrousel' | 'liste'): void {
-    this.changerFiltres({ vue: vue === 'liste' ? 'liste' : null });
-  }
-
-  // Appelé quand une carte (ou le carrousel) émet "reserver"
+  // Appelé quand le carrousel émet "reserver"
   reserver(equipementId: number): void {
     this.message.set(this.reservations.reserver(equipementId));
   }
 
-  estReserveParMoi(equipementId: number): boolean {
-    return this.reservations.mesReservations().some(r => r.equipementId === equipementId);
-  }
 
   effacerFiltres(): void {
     this.changerFiltres({ q: null, categorie: null });

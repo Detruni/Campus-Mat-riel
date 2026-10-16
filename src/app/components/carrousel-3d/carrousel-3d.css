@@ -63,7 +63,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  max-width: 36rem;
+  max-width: 46rem;
   margin: -2.6rem auto 0;
   padding: 0.75rem 1rem;
   border-radius: 999px;
@@ -93,9 +93,20 @@
 }
 
 .sous-titre {
-  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+  margin: 0.15rem 0 0;
   font-size: 0.85rem;
   color: #d4d4d4;
+}
+
+.actions-capsule {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .fleche {
@@ -138,23 +149,15 @@
   outline-offset: 3px;
 }
 
-.actions-carrousel {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-}
 
 /* Boutons en pilule à gros contour, un peu penchés */
 .bouton-pilule {
   display: inline-block;
-  padding: 0.5rem 1.3rem;
-  border: 2.5px solid #141414;
+  padding: 0.45rem 1.1rem;
+  border: 2.5px solid #fff;
   border-radius: 999px;
-  background: #fff;
-  color: #141414;
+  background: transparent;
+  color: #fff;
   font: inherit;
   font-weight: 800;
   text-transform: lowercase;
@@ -164,25 +167,26 @@
 }
 
 .bouton-pilule:hover {
-  background: #141414;
-  color: #fff;
+  background: #fff;
+  color: #141414;
   transform: rotate(0deg) scale(1.04);
 }
 
 .bouton-pilule.plein {
-  background: #141414;
-  color: #fff;
+  background: #fff;
+  color: #141414;
   transform: rotate(2deg);
 }
 
 .bouton-pilule.plein:hover {
-  background: #fff;
-  color: #141414;
+  background: #ffd23f;
+  border-color: #ffd23f;
 }
 
 .note {
-  margin: 0;
-  color: var(--texte-doux);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #d4d4d4;
 }
 
 .compteur {
@@ -198,11 +202,23 @@
     height: 22rem;
   }
 
+  /* Sur mobile la capsule passe sur deux lignes : infos en haut, actions en dessous */
   .capsule {
+    flex-wrap: wrap;
     margin-top: -1.8rem;
     gap: 0.6rem;
-    padding: 0.6rem 0.75rem;
+    padding: 0.75rem;
     border-radius: 24px;
+  }
+
+  .infos {
+    order: -1;
+    flex-basis: 100%;
+  }
+
+  .actions-capsule {
+    flex: 1;
+    justify-content: center;
   }
 
   .titre {
