@@ -1,19 +1,42 @@
-/* Styles communs à toute l'application */
+/*
+ * Direction artistique commune à toute l'application :
+ * fonds colorés en cercles concentriques, typographie grasse en minuscules,
+ * capsules noires et boutons en pilule à gros contour.
+ */
 
 :root {
-  --primaire: #2457c5;
-  --primaire-fonce: #1b3f8f;
-  --texte: #1f2933;
-  --texte-doux: #52606d;
-  --fond: #f4f6fa;
-  --fond-carte: #ffffff;
-  --bordure: #d5dbe5;
-  --succes: #1e7b46;
-  --succes-fond: #e3f5ea;
-  --danger: #b42318;
-  --danger-fond: #fdecea;
-  --info-fond: #e8effc;
-  --rayon: 8px;
+  --encre: #141414;
+  --papier: #fffaf3;
+  --texte: #141414;
+  --texte-doux: #3a3a3a;
+  --fond-carte: #fffaf3;
+  --bordure: #141414;
+  --jaune: #ffd23f;
+  --succes: #137a3a;
+  --succes-fond: #d9f7df;
+  --danger: #b4231b;
+  --danger-fond: #ffe1dc;
+  --info-fond: #fff3c4;
+  --rayon: 22px;
+  --ombre-autocollant: 5px 5px 0 var(--encre);
+  --police: "Libre Franklin", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Anciennes variables encore utilisées par quelques composants */
+  --primaire: var(--encre);
+  --primaire-fonce: var(--encre);
+}
+
+/* Couleurs du fond d'ambiance : déclarées ici pour pouvoir les animer en douceur */
+@property --fond-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ff9a3d;
+}
+
+@property --fond-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f6a6c8;
 }
 
 *,
@@ -22,70 +45,97 @@
   box-sizing: border-box;
 }
 
+html {
+  background: #ff9a3d;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  font-family: var(--police);
   line-height: 1.5;
   color: var(--texte);
-  background: var(--fond);
+  background: transparent;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 800;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 h1 {
   margin-top: 0;
-  font-size: 1.75rem;
+  font-size: clamp(2rem, 5vw, 3.2rem);
 }
 
 a {
-  color: var(--primaire);
+  color: var(--encre);
+  font-weight: 600;
+  text-underline-offset: 3px;
 }
 
-/* Focus bien visible pour la navigation au clavier */
+/* Focus bien visible pour la navigation au clavier, sur tous les fonds */
 :focus-visible {
-  outline: 3px solid #f0a500;
-  outline-offset: 2px;
+  outline: 3px solid var(--encre);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--jaune);
 }
 
-/* Boutons */
+/* Boutons en pilule : contour épais, légèrement penchés */
 button,
 .bouton {
   display: inline-block;
   font: inherit;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--primaire);
-  border-radius: var(--rayon);
-  background: var(--primaire);
+  font-weight: 800;
+  text-transform: lowercase;
+  padding: 0.5rem 1.2rem;
+  border: 2.5px solid var(--encre);
+  border-radius: 999px;
+  background: var(--encre);
   color: #fff;
   text-decoration: none;
   cursor: pointer;
+  transform: rotate(-1.5deg);
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
 button:hover,
 .bouton:hover {
-  background: var(--primaire-fonce);
+  background: var(--papier);
+  color: var(--encre);
+  transform: rotate(0deg) scale(1.04);
 }
 
 button:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
 }
 
 .bouton-secondaire {
-  background: transparent;
-  color: inherit;
-  border-color: currentColor;
+  background: var(--papier);
+  color: var(--encre);
+  transform: rotate(1.5deg);
 }
 
 .bouton-secondaire:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--encre);
+  color: #fff;
 }
 
 .bouton-danger {
   background: var(--danger);
-  border-color: var(--danger);
+  border-color: var(--encre);
+  color: #fff;
 }
 
 .bouton-danger:hover {
-  background: #8f1c13;
+  background: var(--papier);
+  color: var(--danger);
 }
 
 .actions {
@@ -94,44 +144,71 @@ button:disabled {
   gap: 0.75rem;
 }
 
-/* Messages */
+/* Messages : capsule noire avec une pastille de couleur */
 .alerte {
-  padding: 0.75rem 1rem;
-  border-radius: var(--rayon);
-  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  background: var(--encre);
+  color: #fff;
+  font-weight: 600;
 }
 
-.alerte-info {
-  background: var(--info-fond);
-  border-color: #b9cbf2;
+.alerte::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--jaune);
 }
 
-.alerte-succes {
-  background: var(--succes-fond);
-  border-color: #a6dbb9;
-  color: var(--succes);
+.alerte-succes::before {
+  background: #3ddc84;
 }
 
-.alerte-erreur {
-  background: var(--danger-fond);
-  border-color: #f3b5ae;
-  color: var(--danger);
+.alerte-erreur::before {
+  background: #ff5a4f;
 }
 
+.alerte a {
+  color: #fff;
+}
+
+/* Petite pastille d'information (rôle, disponibilité...) */
 .badge {
   display: inline-block;
-  padding: 0.1rem 0.6rem;
+  padding: 0.05rem 0.65rem;
+  border: 2px solid var(--encre);
   border-radius: 999px;
   font-size: 0.8rem;
-  font-weight: 600;
-  background: var(--info-fond);
-  color: var(--primaire-fonce);
+  font-weight: 800;
+  text-transform: lowercase;
+  background: var(--papier);
+  color: var(--encre);
 }
 
+/* Panneau façon autocollant : fond crème, gros contour, ombre décalée */
+.autocollant {
+  background: var(--papier);
+  border: 3px solid var(--encre);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre-autocollant);
+}
+
+/* Page simple centrée (404, accès refusé...) */
 .page-message {
-  max-width: 36rem;
-  margin: 2rem auto;
+  max-width: 40rem;
+  margin: 3rem auto;
+  padding: 2rem;
   text-align: center;
+  background: var(--papier);
+  border: 3px solid var(--encre);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre-autocollant);
+  transform: rotate(-1deg);
 }
 
 .page-message .actions {
@@ -141,7 +218,8 @@ button:disabled {
 /* Champs de formulaire */
 label {
   display: block;
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: lowercase;
   margin-bottom: 0.3rem;
 }
 
@@ -150,11 +228,21 @@ select,
 textarea {
   width: 100%;
   font: inherit;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--bordure);
-  border-radius: var(--rayon);
-  background: #fff;
-  color: var(--texte);
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border: 2.5px solid var(--encre);
+  border-radius: 999px;
+  background: var(--papier);
+  color: var(--encre);
+}
+
+textarea {
+  border-radius: 18px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b6b6b;
 }
 
 /* Texte lu par les lecteurs d'écran mais invisible à l'écran */
@@ -167,15 +255,148 @@ textarea {
   white-space: nowrap;
 }
 
-/* Couleurs du fond du carrousel : déclarées ici pour pouvoir les animer en douceur */
-@property --fond-a {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #ff9a3d;
+/* Respect du réglage "réduire les animations" du système */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-@property --fond-b {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #f6a6c8;
+/* ---------- Contenu des capsules du carrousel (fourni par chaque page) ---------- */
+
+.capsule-contenu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.capsule-infos {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.capsule-titre {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-transform: lowercase;
+  letter-spacing: -0.01em;
+}
+
+.capsule-sous-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.capsule-texte {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: #e6e6e6;
+}
+
+.capsule-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.capsule-note {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #d4d4d4;
+}
+
+/* Boutons en pilule sur fond noir : contour blanc, ou plein blanc */
+.pilule {
+  display: inline-block;
+  padding: 0.45rem 1.1rem;
+  border: 2.5px solid #fff;
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  text-transform: lowercase;
+  text-decoration: none;
+  transform: rotate(-2deg);
+}
+
+.pilule:hover {
+  background: #fff;
+  color: var(--encre);
+  transform: rotate(0deg) scale(1.04);
+}
+
+.pilule-pleine {
+  background: #fff;
+  color: var(--encre);
+  transform: rotate(2deg);
+}
+
+.pilule-pleine:hover {
+  background: var(--jaune);
+  border-color: var(--jaune);
+}
+
+.pilule-danger {
+  border-color: #ff8a80;
+  color: #ffb3ab;
+}
+
+.pilule-danger:hover {
+  background: #ff5a4f;
+  border-color: #ff5a4f;
+  color: #fff;
+}
+
+.capsule-contenu a:not(.pilule) {
+  color: #fff;
+}
+
+/* ---------- Zone du haut des pages en carrousel ---------- */
+
+.titre-page {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  text-align: center;
+}
+
+.chapeau {
+  margin: 0;
+  max-width: 36rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+}
+
+.filtres .champ {
+  flex: 1 1 13rem;
+}
+
+.filtres label {
+  margin-left: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.resultat {
+  margin: 0;
+  font-weight: 800;
+  text-transform: lowercase;
 }

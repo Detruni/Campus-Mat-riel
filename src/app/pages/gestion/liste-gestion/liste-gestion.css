@@ -18,9 +18,10 @@
   position: relative;
   overflow-x: auto;
   margin-top: 1rem;
-  background: var(--fond-carte);
-  border: 1px solid var(--bordure);
+  background: var(--papier);
+  border: 3px solid var(--encre);
   border-radius: var(--rayon);
+  box-shadow: var(--ombre-autocollant);
 }
 
 table {
@@ -32,18 +33,24 @@ th,
 td {
   padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid var(--bordure);
+  border-bottom: 2px solid var(--encre);
   vertical-align: middle;
 }
 
 th {
   font-size: 0.85rem;
-  color: var(--texte-doux);
-  background: var(--fond);
+  font-weight: 800;
+  text-transform: lowercase;
+  background: var(--encre);
+  color: #fff;
 }
 
 tbody tr:last-child td {
   border-bottom: none;
+}
+
+tbody tr:hover {
+  background: #fff1d6;
 }
 
 td .actions {

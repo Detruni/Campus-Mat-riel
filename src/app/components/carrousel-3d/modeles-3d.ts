@@ -201,6 +201,75 @@ function boite(): THREE.Group {
   return g;
 }
 
+/**
+ * Petit personnage pour les comptes de démonstration.
+ * Les étudiants portent une casquette, le responsable un nœud papillon et des lunettes.
+ */
+export function creerAvatar(couleur: string, responsable: boolean): THREE.Group {
+  const g = new THREE.Group();
+  const tenue = matiere(couleur, { roughness: 0.6 });
+  const peau = matiere('#f6d7bd', { roughness: 0.7 });
+  const noir = matiere('#141414', { roughness: 0.4 });
+
+  const corps = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.12, 8, 24), tenue);
+  corps.position.y = 0.17;
+  corps.castShadow = true;
+
+  const tete = new THREE.Mesh(new THREE.SphereGeometry(0.105, 32, 32), peau);
+  tete.position.y = 0.39;
+  tete.castShadow = true;
+
+  for (const x of [-0.038, 0.038]) {
+    const oeil = new THREE.Mesh(new THREE.SphereGeometry(0.013, 16, 16), noir);
+    oeil.position.set(x, 0.405, 0.095);
+    const joue = new THREE.Mesh(new THREE.SphereGeometry(0.016, 16, 16), matiere('#ff9fb2'));
+    joue.scale.set(1, 0.6, 0.4);
+    joue.position.set(x * 1.6, 0.375, 0.088);
+    g.add(oeil, joue);
+  }
+
+  // Sourire : un petit arc de tore
+  const sourire = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.005, 8, 16, Math.PI), noir);
+  sourire.rotation.z = Math.PI;
+  sourire.position.set(0, 0.372, 0.1);
+  g.add(sourire);
+
+  for (const x of [-0.12, 0.12]) {
+    const bras = new THREE.Mesh(new THREE.CapsuleGeometry(0.028, 0.1, 6, 12), tenue);
+    bras.position.set(x, 0.18, 0);
+    bras.rotation.z = x > 0 ? -0.35 : 0.35;
+    bras.castShadow = true;
+    g.add(bras);
+  }
+
+  if (responsable) {
+    // Nœud papillon
+    for (const x of [-0.025, 0.025]) {
+      const aile = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.04, 16), matiere('#ffd23f'));
+      aile.rotation.z = x > 0 ? Math.PI / 2 : -Math.PI / 2;
+      aile.position.set(x, 0.29, 0.085);
+      g.add(aile);
+    }
+    // Lunettes rondes
+    for (const x of [-0.038, 0.038]) {
+      const verre = new THREE.Mesh(new THREE.TorusGeometry(0.024, 0.005, 8, 24), noir);
+      verre.position.set(x, 0.405, 0.1);
+      g.add(verre);
+    }
+  } else {
+    // Casquette : un dôme et une visière
+    const calotte = new THREE.Mesh(new THREE.SphereGeometry(0.108, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), matiere('#ffd23f'));
+    calotte.position.y = 0.41;
+    const visiere = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.01, 32, 1, false, -Math.PI / 2, Math.PI), matiere('#ffd23f'));
+    visiere.position.set(0, 0.415, 0.06);
+    visiere.rotation.x = 0.15;
+    g.add(calotte, visiere);
+  }
+
+  g.add(corps, tete);
+  return g;
+}
+
 export function creerModele(nom: string, categorie: Categorie): THREE.Group {
   switch (categorie) {
     case 'Informatique':

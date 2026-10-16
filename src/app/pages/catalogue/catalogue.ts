@@ -1,8 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
+import { BadgeDisponibilite } from '../../components/badge-disponibilite/badge-disponibilite';
 import { Carrousel3d } from '../../components/carrousel-3d/carrousel-3d';
+import { elementsEquipements } from '../../components/carrousel-3d/elements';
 import { CATEGORIES, Categorie } from '../../data/donnees-initiales';
 import { CatalogueService } from '../../services/catalogue.service';
 import { ReservationService } from '../../services/reservation.service';
@@ -11,9 +13,8 @@ import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-catalogue',
-  imports: [Carrousel3d],
-  templateUrl: './catalogue.html',
-  styleUrl: './catalogue.css'
+  imports: [Carrousel3d, BadgeDisponibilite, RouterLink],
+  templateUrl: './catalogue.html'
 })
 export class Catalogue {
   readonly catalogue = inject(CatalogueService);
@@ -54,6 +55,13 @@ export class Catalogue {
     );
   });
 
+  // Le carrousel : l'indice de l'équipement affiché et les pochettes à dessiner
+  readonly indice = signal(0);
+  readonly courant = computed(() => this.equipementsVisibles()[this.indice()]);
+  readonly elements = computed(() =>
+    elementsEquipements(this.equipementsVisibles(), this.reservations.idsReserves())
+  );
+
   // Nombre d'équipements par catégorie, affiché dans la liste déroulante
   readonly compteurs = computed(() => {
     const compteurs: Partial<Record<Categorie, number>> = {};
@@ -64,6 +72,8 @@ export class Catalogue {
   });
 
   changerFiltres(filtres: { q?: string | null; categorie?: string | null }): void {
+    // Nouvelle recherche : on repart du premier résultat
+    this.indice.set(0);
     // null retire le paramètre de l'URL ; replaceUrl évite une entrée d'historique à chaque lettre
     this.router.navigate([], {
       relativeTo: this.route,
@@ -73,7 +83,16 @@ export class Catalogue {
     });
   }
 
-  // Appelé quand le carrousel émet "reserver"
+  // Double-clic ou Entrée sur la pochette du centre : on ouvre la fiche
+  ouvrir(indice: number): void {
+    const equipement = this.equipementsVisibles()[indice];
+    if (equipement) this.router.navigate(['/materiels', equipement.id]);
+  }
+
+  numero(n: number): string {
+    return String(n).padStart(2, '0');
+  }
+
   reserver(equipementId: number): void {
     this.message.set(this.reservations.reserver(equipementId));
   }

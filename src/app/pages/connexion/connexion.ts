@@ -1,5 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Carrousel3d } from '../../components/carrousel-3d/carrousel-3d';
+import { elementsComptes } from '../../components/carrousel-3d/elements';
 import { CatalogueService } from '../../services/catalogue.service';
 import { ReservationService } from '../../services/reservation.service';
 import { LIBELLES_ROLES, SessionService } from '../../services/session.service';
@@ -13,6 +15,7 @@ function cheminDeRetour(valeur: string | null): string {
 
 @Component({
   selector: 'app-connexion',
+  imports: [Carrousel3d],
   templateUrl: './connexion.html',
   styleUrl: './connexion.css'
 })
@@ -25,6 +28,17 @@ export class Connexion {
 
   readonly libellesRoles = LIBELLES_ROLES;
   readonly messageReinitialisation = signal('');
+
+  // Les comptes de démonstration défilent dans le carrousel, chacun avec son personnage
+  readonly indice = signal(0);
+  readonly elements = computed(() => elementsComptes(this.session.comptes, this.libellesRoles));
+  readonly compteAffiche = computed(() => this.session.comptes[this.indice()]);
+
+  // Double-clic ou Entrée sur la pochette du centre
+  ouvrir(indice: number): void {
+    const compte = this.session.comptes[indice];
+    if (compte) this.choisir(compte.id);
+  }
 
   choisir(id: number): void {
     if (this.session.connecter(id)) {
