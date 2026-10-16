@@ -261,9 +261,11 @@ gros contour, un peu penchés.
 
 Dans les carrousels, l'élément du milieu est de face et tourne doucement, les voisins sont inclinés
 sur les côtés, et le fond change de couleur selon l'élément affiché (`AmbianceService`).
-On change d'élément avec les flèches de la capsule, les points sous la capsule, les flèches gauche /
-droite du clavier (quand le carrousel a le focus), en glissant la souris ou le doigt, ou en cliquant
-sur une pochette voisine. `Entrée` ou un double-clic sur la pochette du milieu ouvre l'élément.
+On change d'élément avec **la molette de la souris** (ou deux doigts sur un pavé tactile), les
+flèches de la capsule, les points sous la capsule, les flèches gauche / droite du clavier (quand le
+carrousel a le focus), en glissant la souris ou le doigt, ou en cliquant sur une pochette voisine.
+Pendant le mouvement, les pochettes glissent et penchent dans le sens du déplacement. Sur mobile,
+la molette fait défiler la page normalement. `Entrée` ou un double-clic sur la pochette du milieu ouvre l'élément.
 
 Les objets 3D sont construits avec des formes simples dans `modeles-3d.ts` (aucun fichier 3D à
 télécharger) et les textes des pastilles sont dessinés dans des canvas.
@@ -356,6 +358,8 @@ en haut de la page `/login` (ou vider le `localStorage` dans les outils de déve
 - **Chargement différé** : ouvrir l'onglet Réseau (filtre JS), se connecter avec Camille et cliquer
   sur Gestion : un nouveau fichier JavaScript est téléchargé à ce moment-là. Il en va de même pour
   les pages en 3D, qui sont téléchargées à leur première ouverture.
+- **Molette** : sur le catalogue, faire tourner la molette : chaque cran passe à l'équipement suivant
+  (ou précédent) avec une animation, la capsule et la couleur du fond suivent.
 - **Carrousel au clavier** : cliquer dans la scène (ou y arriver avec Tab), puis utiliser les flèches
   gauche / droite ; `Entrée` ouvre l'élément du centre.
 
