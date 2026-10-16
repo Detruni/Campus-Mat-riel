@@ -1,1 +1,139 @@
-/* You can add global styles to this file, and also import other style files */
+/* Styles communs à toute l'application */
+
+:root {
+  --primaire: #2457c5;
+  --primaire-fonce: #1b3f8f;
+  --texte: #1f2933;
+  --texte-doux: #52606d;
+  --fond: #f4f6fa;
+  --fond-carte: #ffffff;
+  --bordure: #d5dbe5;
+  --succes: #1e7b46;
+  --succes-fond: #e3f5ea;
+  --danger: #b42318;
+  --danger-fond: #fdecea;
+  --info-fond: #e8effc;
+  --rayon: 8px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--texte);
+  background: var(--fond);
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 1.75rem;
+}
+
+a {
+  color: var(--primaire);
+}
+
+/* Focus bien visible pour la navigation au clavier */
+:focus-visible {
+  outline: 3px solid #f0a500;
+  outline-offset: 2px;
+}
+
+/* Boutons */
+button,
+.bouton {
+  display: inline-block;
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primaire);
+  border-radius: var(--rayon);
+  background: var(--primaire);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button:hover,
+.bouton:hover {
+  background: var(--primaire-fonce);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bouton-secondaire {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+}
+
+.bouton-secondaire:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.bouton-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.bouton-danger:hover {
+  background: #8f1c13;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Messages */
+.alerte {
+  padding: 0.75rem 1rem;
+  border-radius: var(--rayon);
+  border: 1px solid transparent;
+}
+
+.alerte-info {
+  background: var(--info-fond);
+  border-color: #b9cbf2;
+}
+
+.alerte-succes {
+  background: var(--succes-fond);
+  border-color: #a6dbb9;
+  color: var(--succes);
+}
+
+.alerte-erreur {
+  background: var(--danger-fond);
+  border-color: #f3b5ae;
+  color: var(--danger);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--info-fond);
+  color: var(--primaire-fonce);
+}
+
+.page-message {
+  max-width: 36rem;
+  margin: 2rem auto;
+  text-align: center;
+}
+
+.page-message .actions {
+  justify-content: center;
+}

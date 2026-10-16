@@ -1,0 +1,25 @@
+<section class="carte-connexion">
+  <h1>Connexion</h1>
+  <p>
+    Choisissez un compte de démonstration. La connexion est simulée :
+    aucun mot de passe n'est demandé.
+  </p>
+
+  @if (session.utilisateur(); as utilisateur) {
+    <p class="alerte alerte-info" role="status">
+      Vous êtes actuellement connecté en tant que <strong>{{ utilisateur.nom }}</strong>.
+      Vous pouvez changer de compte ci-dessous.
+    </p>
+  }
+
+  <ul class="liste-comptes">
+    @for (compte of session.comptes; track compte.id) {
+      <li>
+        <button type="button" class="bouton-compte" (click)="choisir(compte.id)">
+          <span class="nom-compte">{{ compte.nom }}</span>
+          <span class="badge">{{ libellesRoles[compte.role] }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+</section>
