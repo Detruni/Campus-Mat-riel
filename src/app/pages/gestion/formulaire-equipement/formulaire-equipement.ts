@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CATEGORIES, Categorie } from '../../../data/donnees-initiales';
+import { PageAvecFormulaire } from '../../../guards/formulaire.guard';
 import { CatalogueService, DonneesEquipement } from '../../../services/catalogue.service';
 import { MessageService } from '../../../services/message.service';
 import { Resultat } from '../../../services/resultat';
@@ -27,7 +28,7 @@ const LIBELLES: Record<Champ, string> = {
   templateUrl: './formulaire-equipement.html',
   styleUrl: './formulaire-equipement.css'
 })
-export class FormulaireEquipement implements OnInit {
+export class FormulaireEquipement implements OnInit, PageAvecFormulaire {
   readonly id = input<string>();
 
   private readonly catalogue = inject(CatalogueService);
@@ -92,6 +93,15 @@ export class FormulaireEquipement implements OnInit {
     return `${LIBELLES[champ]} n'est pas valide.`;
   }
 
+  // Passe à true après un enregistrement réussi : on peut alors quitter sans confirmation
+  private enregistre = false;
+
+  // Appelé par formulaireGuard quand on essaie de quitter la page
+  peutQuitter(): boolean {
+    if (this.enregistre || !this.form.dirty) return true;
+    return confirm('Les modifications de ce formulaire ne sont pas enregistrées. Quitter quand même ?');
+  }
+
   enregistrer(): void {
     if (this.form.invalid) {
       // On affiche toutes les erreurs ; les valeurs saisies restent dans le formulaire
@@ -123,6 +133,7 @@ export class FormulaireEquipement implements OnInit {
 
     // Le message est confié au MessageService, la liste de gestion l'affichera
     this.messages.transmettre(message);
+    this.enregistre = true;
     this.router.navigate(['/gestion']);
   }
 }
