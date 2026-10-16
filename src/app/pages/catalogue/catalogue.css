@@ -1,0 +1,30 @@
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.filtres .champ {
+  flex: 1 1 14rem;
+}
+
+.resultat {
+  color: var(--texte-doux);
+}
+
+.grille {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+
+.vide {
+  grid-column: 1 / -1;
+}
