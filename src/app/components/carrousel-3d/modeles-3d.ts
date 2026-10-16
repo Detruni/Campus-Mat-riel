@@ -267,7 +267,12 @@ export function creerAvatar(couleur: string, responsable: boolean): THREE.Group 
   }
 
   g.add(corps, tete);
-  return g;
+
+  // Le personnage est plus haut que les objets : on le réduit un peu pour qu'il ne cache pas la pastille
+  const personnage = new THREE.Group();
+  g.scale.setScalar(0.8);
+  personnage.add(g);
+  return personnage;
 }
 
 export function creerModele(nom: string, categorie: Categorie): THREE.Group {
