@@ -52,9 +52,6 @@ export class ReservationService {
     this.etat.set(structuredClone(RESERVATIONS_INITIALES));
   }
 
-  reservationDe(equipementId: number): Reservation | undefined {
-    return this.etat().find(r => r.equipementId === equipementId);
-  }
 
   /**
    * Trajet d'une réservation :
