@@ -92,6 +92,26 @@
   justify-content: space-between;
 }
 
+/* Petite capsule "chargement…" en bas de l'écran pendant qu'une page se télécharge */
+.indicateur-chargement {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  z-index: 20;
+  margin: 0;
+  transform: translateX(-50%);
+}
+
+.indicateur-chargement::before {
+  animation: clignote 0.9s ease-in-out infinite;
+}
+
+@keyframes clignote {
+  50% {
+    opacity: 0.2;
+  }
+}
+
 /* Les pages laissent la place à l'en-tête ; les carrousels prennent tout l'écran */
 main {
   max-width: 64rem;
