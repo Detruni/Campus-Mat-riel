@@ -18,11 +18,11 @@
   </div>
 
   <!-- Zone du haut : titre, filtres, messages fournis par la page -->
-  <div class="haut">
+  <div class="haut" #haut>
     <ng-content select="[haut]" />
   </div>
 
-  <div class="bas">
+  <div class="bas" #bas>
     <div class="capsule">
       @if (navigation()) {
         <button
