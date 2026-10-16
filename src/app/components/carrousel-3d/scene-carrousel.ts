@@ -67,6 +67,11 @@ export class SceneCarrousel {
   private vitesse = 0;
   private positionPrecedente = 0;
 
+  // Zone libre de l'écran (en pixels, depuis le haut du canvas) entre les textes du haut et la capsule
+  private zoneLibre = { haut: 0, bas: 0 };
+  // Position visée par la caméra : elle la rejoint en douceur quand la zone libre change
+  private readonly cameraVisee = new THREE.Vector3(0, 0, 8.8);
+
   constructor(private readonly conteneur: HTMLElement, private readonly rappels: RappelsCarrousel) {
     // Lève une erreur si WebGL n'est pas disponible : le composant affiche alors la liste
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -103,7 +108,7 @@ export class SceneCarrousel {
     this.scene.add(lumiere);
 
     // La caméra est placée un peu haut : la pochette descend entre les filtres et la capsule
-    this.camera.position.set(0, 0.4, 8.8);
+    this.camera.position.set(0, 0, 8.8);
 
     this.brancherEvenements(canvas);
     this.observateur = new ResizeObserver(() => this.redimensionner());
@@ -202,14 +207,22 @@ export class SceneCarrousel {
         new THREE.PlaneGeometry(0.62, 0.2),
         new THREE.MeshBasicMaterial({ map: textureEtiquette(element.etiquette.texte, element.etiquette.couleur), toneMapped: false })
       );
-      etiquette.position.set(0.58, -0.76, 0.036);
+      // En haut à droite : l'objet qui tourne devant ne la cache jamais
+      etiquette.position.set(0.56, 0.78, 0.036);
       groupe.add(etiquette);
     }
 
     // L'objet en 3D, posé devant la pochette
     const modele = element.modele();
     modele.scale.setScalar(ECHELLE_OBJET);
-    modele.position.set(0, -0.62, 0.45);
+    // On avance l'objet d'au moins son "rayon" (vu de dessus) : en tournant sur lui-même,
+    // il ne peut ainsi jamais rentrer dans la pochette.
+    const boite = new THREE.Box3().setFromObject(modele);
+    const rayon = Math.hypot(
+      Math.max(Math.abs(boite.min.x), Math.abs(boite.max.x)),
+      Math.max(Math.abs(boite.min.z), Math.abs(boite.max.z))
+    );
+    modele.position.set(0, -0.62, rayon + 0.08);
     modele.traverse(objet => {
       if (objet instanceof THREE.Mesh) objet.castShadow = true;
     });
@@ -270,6 +283,10 @@ export class SceneCarrousel {
       }
     });
 
+    // La caméra rejoint son cadrage en douceur (par exemple quand un message apparaît en haut)
+    if (this.sansAnimation) this.camera.position.copy(this.cameraVisee);
+    else this.camera.position.lerp(this.cameraVisee, Math.min(1, dt * 5));
+
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -329,16 +346,48 @@ export class SceneCarrousel {
     return touche ? (touche.object.userData['indice'] as number) : null;
   }
 
+  /**
+   * La page indique où se trouve l'espace libre (entre la zone du haut et la capsule).
+   * La caméra se recule et se décale pour que la pochette du centre tienne dans cet espace.
+   */
+  cadrer(haut: number, bas: number): void {
+    this.zoneLibre = { haut, bas };
+    this.calculerCamera();
+  }
+
   private redimensionner(): void {
     const largeur = this.conteneur.clientWidth;
     const hauteur = this.conteneur.clientHeight;
     if (largeur === 0 || hauteur === 0) return;
     this.renderer.setSize(largeur, hauteur);
     this.camera.aspect = largeur / hauteur;
-    // Sur mobile la scène est un bloc à part (sans filtres par-dessus) : pochette centrée
-    const mobile = largeur < 760;
-    this.camera.position.set(0, mobile ? 0.05 : 0.4, mobile ? 5.2 : 8.8);
     this.camera.updateProjectionMatrix();
+    this.calculerCamera();
+  }
+
+  private calculerCamera(): void {
+    const hauteur = this.conteneur.clientHeight;
+    if (hauteur === 0) return;
+
+    // Sans information (ou zone trop petite), on utilise toute la hauteur du canvas
+    let { haut, bas } = this.zoneLibre;
+    if (bas - haut < hauteur * 0.25) {
+      haut = 0;
+      bas = hauteur;
+    }
+
+    // La pochette occupe 85 % de la zone libre, sans dépasser 55 % de l'écran
+    // (75 % quand la scène est seule, comme sur mobile, où les textes sont au-dessus et en dessous)
+    const sceneSeule = haut === 0 && bas === hauteur;
+    const fraction = Math.min(((bas - haut) * 0.85) / hauteur, sceneSeule ? 0.75 : 0.55);
+    const tangente = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    // Recul nécessaire pour que la pochette prenne cette fraction de la hauteur
+    const recul = TAILLE_POCHETTE / (fraction * 2 * tangente);
+
+    // Décalage vertical : le centre de la zone libre n'est pas forcément le centre de l'écran
+    const unitesParPixel = (2 * recul * tangente) / hauteur;
+    const ecartPixels = (haut + bas) / 2 - hauteur / 2;
+    this.cameraVisee.set(0, ecartPixels * unitesParPixel, recul);
   }
 }
 

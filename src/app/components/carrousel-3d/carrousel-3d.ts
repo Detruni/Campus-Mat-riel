@@ -28,6 +28,10 @@ export class Carrousel3d implements OnDestroy {
 
   private readonly zoneScene = viewChild.required<ElementRef<HTMLDivElement>>('scene');
   private readonly zoneCapsule = viewChild.required<ElementRef<HTMLDivElement>>('capsule');
+  private readonly zoneHaut = viewChild.required<ElementRef<HTMLDivElement>>('haut');
+  private readonly zoneBas = viewChild.required<ElementRef<HTMLDivElement>>('bas');
+  // Surveille la taille des zones de texte pour recadrer la 3D (message qui apparaît, etc.)
+  private observateur?: ResizeObserver;
   private readonly ambiance = inject(AmbianceService);
   private scene?: SceneCarrousel;
 
@@ -52,6 +56,12 @@ export class Carrousel3d implements OnDestroy {
           this.scene?.afficher(this.elements());
           this.scene?.allerA(this.indice(), true);
         });
+
+      this.observateur = new ResizeObserver(() => this.cadrer());
+      for (const zone of [this.zoneScene(), this.zoneHaut(), this.zoneBas()]) {
+        this.observateur.observe(zone.nativeElement);
+      }
+      this.cadrer();
     });
 
     // La liste a changé (filtre, réservation...) : on redessine les pochettes.
@@ -79,7 +89,25 @@ export class Carrousel3d implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.observateur?.disconnect();
     this.scene?.detruire();
+  }
+
+  // Indique à la scène l'espace libre entre la zone du haut et la capsule,
+  // pour que la pochette du centre ne soit jamais cachée par du texte.
+  private cadrer(): void {
+    const scene = this.zoneScene().nativeElement.getBoundingClientRect();
+    const bas = this.zoneBas().nativeElement;
+
+    // Sur mobile les textes sont au-dessus et en dessous de la scène : tout le canvas est libre
+    if (getComputedStyle(bas).position !== 'absolute') {
+      this.scene?.cadrer(0, scene.height);
+      return;
+    }
+
+    const marge = 16;
+    const haut = this.zoneHaut().nativeElement.getBoundingClientRect();
+    this.scene?.cadrer(haut.bottom - scene.top + marge, bas.getBoundingClientRect().top - scene.top - marge);
   }
 
   // Le texte de la capsule glisse et apparaît à chaque changement d'élément
