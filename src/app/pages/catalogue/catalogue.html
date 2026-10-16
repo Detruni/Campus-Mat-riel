@@ -40,8 +40,41 @@
   </p>
 }
 
+<div class="choix-vue" role="group" aria-label="Type d'affichage">
+  <button type="button" class="bouton-vue" [attr.aria-pressed]="vue() === 'carrousel'" (click)="changerVue('carrousel')">
+    Carrousel 3D
+  </button>
+  <button type="button" class="bouton-vue" [attr.aria-pressed]="vue() === 'liste'" (click)="changerVue('liste')">
+    Liste
+  </button>
+</div>
+
 @if (catalogue.equipements().length === 0) {
   <p class="alerte alerte-info">Le catalogue est vide pour le moment.</p>
+} @else if (equipementsVisibles().length === 0) {
+  <div class="vide">
+    <p class="alerte alerte-info">
+      Aucun équipement ne correspond à vos critères de recherche.
+    </p>
+    <button type="button" class="bouton-secondaire" (click)="effacerFiltres()">
+      Effacer les filtres
+    </button>
+  </div>
+} @else if (vue() === 'carrousel') {
+  <!-- @defer : le carrousel et Three.js ne sont téléchargés que lorsqu'on en a besoin -->
+  @defer (on immediate) {
+    <app-carrousel-3d
+      [equipements]="equipementsVisibles()"
+      [reserves]="reservations.idsReserves()"
+      [mesReservations]="mesIds()"
+      [peutReserver]="session.estEtudiant()"
+      (reserver)="reserver($event)"
+    />
+  } @loading (minimum 300ms) {
+    <p class="chargement" role="status">Chargement de la vue 3D…</p>
+  } @error {
+    <p class="alerte alerte-erreur">La vue 3D n'a pas pu être chargée. Utilisez l'affichage en liste.</p>
+  }
 } @else {
   <ul class="grille">
     @for (equipement of equipementsVisibles(); track equipement.id) {
@@ -53,15 +86,6 @@
           [reserveParMoi]="estReserveParMoi(equipement.id)"
           (reserver)="reserver($event)"
         />
-      </li>
-    } @empty {
-      <li class="vide">
-        <p class="alerte alerte-info">
-          Aucun équipement ne correspond à vos critères de recherche.
-        </p>
-        <button type="button" class="bouton-secondaire" (click)="effacerFiltres()">
-          Effacer les filtres
-        </button>
       </li>
     }
   </ul>
