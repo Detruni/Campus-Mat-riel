@@ -400,3 +400,11 @@ textarea::placeholder {
   font-weight: 800;
   text-transform: lowercase;
 }
+
+/* La zone du haut fournie par la page : éléments centrés et bien espacés */
+[haut] {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
