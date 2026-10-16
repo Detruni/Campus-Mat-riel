@@ -1,32 +1,34 @@
 import { Routes } from '@angular/router';
 import { connexionGuard, roleGuard } from './guards/acces.guard';
 import { AccesRefuse } from './pages/acces-refuse/acces-refuse';
-import { Catalogue } from './pages/catalogue/catalogue';
-import { Connexion } from './pages/connexion/connexion';
-import { FicheMateriel } from './pages/fiche-materiel/fiche-materiel';
-import { MesReservations } from './pages/mes-reservations/mes-reservations';
 import { PageIntrouvable } from './pages/page-introuvable/page-introuvable';
 
+// Les pages qui affichent le carrousel 3D sont chargées à la demande (loadComponent) :
+// Three.js n'est donc pas dans le fichier de démarrage de l'application.
 export const routes: Routes = [
   // Le guard du catalogue renvoie vers /login si personne n'est connecté
   { path: '', redirectTo: 'catalogue', pathMatch: 'full' },
-  { path: 'login', component: Connexion, title: 'Connexion - Campus Matériel' },
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/connexion/connexion').then(m => m.Connexion),
+    title: 'Connexion - Campus Matériel'
+  },
   {
     path: 'catalogue',
-    component: Catalogue,
     canActivate: [connexionGuard],
+    loadComponent: () => import('./pages/catalogue/catalogue').then(m => m.Catalogue),
     title: 'Catalogue - Campus Matériel'
   },
   {
     path: 'materiels/:id',
-    component: FicheMateriel,
     canActivate: [connexionGuard],
+    loadComponent: () => import('./pages/fiche-materiel/fiche-materiel').then(m => m.FicheMateriel),
     title: 'Fiche matériel - Campus Matériel'
   },
   {
     path: 'mes-reservations',
-    component: MesReservations,
     canActivate: [roleGuard('student')],
+    loadComponent: () => import('./pages/mes-reservations/mes-reservations').then(m => m.MesReservations),
     title: 'Mes réservations - Campus Matériel'
   },
   {

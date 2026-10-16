@@ -1,36 +1,53 @@
-<h1>Mes réservations</h1>
+<app-carrousel-3d
+  libelle="Mes réservations"
+  [elements]="elements()"
+  [(indice)]="indice"
+  (ouvrir)="ouvrir($event)"
+>
+  <div haut>
+    <h1 class="titre-page">Mes réservations</h1>
 
-@if (message(); as m) {
-  <p class="alerte" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
-    {{ m.message }}
-  </p>
-}
+    @if (message(); as m) {
+      <p class="alerte" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
+        {{ m.message }}
+      </p>
+    }
+  </div>
 
-<ul class="liste-reservations">
-  @for (ligne of lignes(); track ligne.reservation.id) {
-    <li class="ligne">
-      <div>
-        @if (ligne.equipement; as e) {
-          <a [routerLink]="['/materiels', e.id]" class="nom">{{ e.nom }}</a>
-          <span class="localisation">{{ e.localisation }}</span>
-        } @else {
-          <!-- Ne devrait pas arriver : un équipement réservé ne peut pas être supprimé -->
-          <span class="nom">Équipement n° {{ ligne.reservation.equipementId }} (introuvable)</span>
-        }
+  <div capsule>
+    @if (courante(); as ligne) {
+      <div class="capsule-contenu" aria-live="polite">
+        <div class="capsule-infos">
+          @if (ligne.equipement; as e) {
+            <p class="capsule-titre">{{ numero(indice() + 1) }}. {{ e.nom }}</p>
+            <p class="capsule-sous-titre">{{ e.categorie }} · {{ e.localisation }}</p>
+          } @else {
+            <!-- Ne devrait pas arriver : un équipement réservé ne peut pas être supprimé -->
+            <p class="capsule-titre">Équipement n° {{ ligne.reservation.equipementId }} (introuvable)</p>
+          }
+        </div>
+
+        <div class="capsule-actions">
+          @if (ligne.equipement; as e) {
+            <a [routerLink]="['/materiels', e.id]" class="pilule">
+              Voir la fiche <span class="visuellement-cache">« {{ e.nom }} »</span>
+            </a>
+          }
+          <button
+            type="button"
+            class="pilule pilule-danger"
+            [attr.aria-label]="'Annuler la réservation de ' + (ligne.equipement?.nom ?? 'cet équipement')"
+            (click)="annuler(ligne.reservation.id)"
+          >
+            Annuler
+          </button>
+        </div>
       </div>
-      <button
-        type="button"
-        class="bouton-danger"
-        [attr.aria-label]="'Annuler la réservation de ' + (ligne.equipement?.nom ?? 'cet équipement')"
-        (click)="annuler(ligne.reservation.id)"
-      >
-        Annuler
-      </button>
-    </li>
-  } @empty {
-    <li>
-      <p class="alerte alerte-info">Vous n'avez aucune réservation en cours.</p>
-      <a routerLink="/catalogue" class="bouton">Parcourir le catalogue</a>
-    </li>
-  }
-</ul>
+    } @else {
+      <div class="capsule-contenu">
+        <p class="capsule-titre capsule-infos">Vous n'avez aucune réservation en cours.</p>
+        <a routerLink="/catalogue" class="pilule pilule-pleine">Parcourir le catalogue</a>
+      </div>
+    }
+  </div>
+</app-carrousel-3d>

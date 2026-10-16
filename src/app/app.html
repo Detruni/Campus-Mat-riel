@@ -1,30 +1,33 @@
+<app-fond-ambiance />
+
 <header class="entete">
-  <div class="entete-contenu">
-    <a routerLink="/" class="logo">Campus Matériel</a>
-
-    <nav aria-label="Menu principal" class="menu">
-      @if (session.utilisateur(); as utilisateur) {
-        <a routerLink="/catalogue" routerLinkActive="actif" ariaCurrentWhenActive="page">Catalogue</a>
-        @if (session.estEtudiant()) {
-          <a routerLink="/mes-reservations" routerLinkActive="actif" ariaCurrentWhenActive="page">
-            Mes réservations
-          </a>
-        }
-        @if (session.estResponsable()) {
-          <a routerLink="/gestion" routerLinkActive="actif" ariaCurrentWhenActive="page">Gestion</a>
-        }
-
-        <span class="utilisateur">
-          {{ utilisateur.nom }}
-          <span class="badge">{{ libellesRoles[utilisateur.role] }}</span>
-        </span>
-        <button type="button" class="bouton-secondaire" (click)="session.deconnecter()">
-          Se déconnecter
-        </button>
-      } @else {
-        <a routerLink="/login" routerLinkActive="actif" ariaCurrentWhenActive="page">Connexion</a>
+  <nav aria-label="Menu principal" class="menu">
+    @if (session.utilisateur()) {
+      <a routerLink="/catalogue" routerLinkActive="actif" ariaCurrentWhenActive="page">Catalogue</a>
+      @if (session.estEtudiant()) {
+        <a routerLink="/mes-reservations" routerLinkActive="actif" ariaCurrentWhenActive="page">Mes réservations</a>
       }
-    </nav>
+      @if (session.estResponsable()) {
+        <a routerLink="/gestion" routerLinkActive="actif" ariaCurrentWhenActive="page">Gestion</a>
+      }
+    } @else {
+      <a routerLink="/login" routerLinkActive="actif" ariaCurrentWhenActive="page">Connexion</a>
+    }
+  </nav>
+
+  <a routerLink="/" class="logo">
+    <span>campus</span>
+    <span>matériel</span>
+  </a>
+
+  <div class="compte">
+    @if (session.utilisateur(); as utilisateur) {
+      <span class="utilisateur">
+        {{ utilisateur.nom }}
+        <span class="badge">{{ libellesRoles[utilisateur.role] }}</span>
+      </span>
+      <button type="button" class="bouton-secondaire" (click)="session.deconnecter()">Se déconnecter</button>
+    }
   </div>
 </header>
 
