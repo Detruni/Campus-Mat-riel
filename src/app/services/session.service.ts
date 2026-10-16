@@ -28,6 +28,18 @@ export class SessionService {
   readonly estEtudiant = computed(() => this.etat()?.role === 'student');
   readonly estResponsable = computed(() => this.etat()?.role === 'manager');
 
+  constructor() {
+    // Connexion ou déconnexion dans un autre onglet : cet onglet suit le même compte.
+    // Les guards ne se relancent pas tout seuls, on renvoie donc vers une page sûre.
+    this.stockage.surveiller(CLE_SESSION, () => {
+      const avant = this.etat();
+      const apres = this.restaurer();
+      if (avant?.id === apres?.id) return;
+      this.etat.set(apres);
+      this.router.navigateByUrl(apres ? '/catalogue' : '/login', { replaceUrl: true });
+    });
+  }
+
   connecter(id: number): boolean {
     const compte = this.comptes.find(c => c.id === id);
     if (!compte) return false;
