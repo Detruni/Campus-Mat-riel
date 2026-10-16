@@ -1,0 +1,81 @@
+<p><a routerLink="/gestion">&larr; Retour à la gestion</a></p>
+
+@if (introuvable()) {
+  <section class="page-message">
+    <h1>Équipement introuvable</h1>
+    <p>Aucun équipement ne correspond à l'identifiant « {{ id() }} ».</p>
+    <p class="actions">
+      <a routerLink="/gestion" class="bouton">Retour à la gestion</a>
+    </p>
+  </section>
+} @else {
+  <section class="carte-formulaire">
+    <h1>{{ enModification() ? 'Modifier un équipement' : 'Nouvel équipement' }}</h1>
+    <p class="aide">Tous les champs marqués d'un * sont obligatoires.</p>
+
+    @if (erreurEnvoi() && form.invalid) {
+      <p class="alerte alerte-erreur" role="alert">
+        Le formulaire contient des erreurs. Corrigez les champs indiqués puis enregistrez à nouveau.
+      </p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="enregistrer()" novalidate>
+      <div class="champ">
+        <label for="nom">Nom *</label>
+        <input
+          id="nom"
+          formControlName="nom"
+          aria-describedby="nom-erreur"
+          [attr.aria-invalid]="messageErreur('nom') ? true : null"
+        />
+        <p id="nom-erreur" class="erreur" aria-live="polite">{{ messageErreur('nom') }}</p>
+      </div>
+
+      <div class="champ">
+        <label for="categorie">Catégorie *</label>
+        <select
+          id="categorie"
+          formControlName="categorie"
+          aria-describedby="categorie-erreur"
+          [attr.aria-invalid]="messageErreur('categorie') ? true : null"
+        >
+          <option value="">-- Choisir une catégorie --</option>
+          @for (c of categories; track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+        <p id="categorie-erreur" class="erreur" aria-live="polite">{{ messageErreur('categorie') }}</p>
+      </div>
+
+      <div class="champ">
+        <label for="description">Description *</label>
+        <textarea
+          id="description"
+          rows="4"
+          formControlName="description"
+          aria-describedby="description-aide description-erreur"
+          [attr.aria-invalid]="messageErreur('description') ? true : null"
+        ></textarea>
+        <p id="description-aide" class="aide">Au moins 10 caractères.</p>
+        <p id="description-erreur" class="erreur" aria-live="polite">{{ messageErreur('description') }}</p>
+      </div>
+
+      <div class="champ">
+        <label for="localisation">Localisation *</label>
+        <input
+          id="localisation"
+          formControlName="localisation"
+          placeholder="Ex. : Salle B204"
+          aria-describedby="localisation-erreur"
+          [attr.aria-invalid]="messageErreur('localisation') ? true : null"
+        />
+        <p id="localisation-erreur" class="erreur" aria-live="polite">{{ messageErreur('localisation') }}</p>
+      </div>
+
+      <p class="actions">
+        <button type="submit">{{ enModification() ? 'Enregistrer les modifications' : 'Ajouter au catalogue' }}</button>
+        <a routerLink="/gestion" class="bouton bouton-secondaire">Annuler</a>
+      </p>
+    </form>
+  </section>
+}

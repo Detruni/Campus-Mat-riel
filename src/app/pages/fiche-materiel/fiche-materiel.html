@@ -26,6 +26,12 @@
       </div>
     </dl>
 
+    @if (session.estResponsable()) {
+      <p class="actions">
+        <a [routerLink]="['/gestion', e.id, 'modifier']" class="bouton">Modifier cette fiche</a>
+      </p>
+    }
+
     @if (session.estEtudiant()) {
       <section class="zone-reservation" aria-labelledby="titre-reservation">
         <h2 id="titre-reservation">Réservation</h2>

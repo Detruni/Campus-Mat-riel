@@ -29,6 +29,12 @@ export const routes: Routes = [
     canActivate: [roleGuard('student')],
     title: 'Mes réservations - Campus Matériel'
   },
+  {
+    // Espace responsable chargé à la demande (lazy loading)
+    path: 'gestion',
+    canActivate: [roleGuard('manager')],
+    loadChildren: () => import('./pages/gestion/gestion.routes').then(m => m.GESTION_ROUTES)
+  },
   { path: 'acces-refuse', component: AccesRefuse, title: 'Accès refusé - Campus Matériel' },
   // Toujours en dernier
   { path: '**', component: PageIntrouvable, title: 'Page introuvable - Campus Matériel' }

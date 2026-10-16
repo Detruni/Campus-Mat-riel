@@ -1,0 +1,30 @@
+.carte-formulaire {
+  max-width: 40rem;
+  padding: 1.5rem;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.champ {
+  margin-bottom: 0.5rem;
+}
+
+.aide {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+/* Le paragraphe reste présent (vide) pour que aria-live fonctionne */
+.erreur {
+  min-height: 1.4em;
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: var(--danger);
+}
+
+[aria-invalid="true"] {
+  border-color: var(--danger);
+  background: var(--danger-fond);
+}
