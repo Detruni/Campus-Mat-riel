@@ -166,3 +166,16 @@ textarea {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Couleurs du fond du carrousel : déclarées ici pour pouvoir les animer en douceur */
+@property --fond-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ff9a3d;
+}
+
+@property --fond-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f6a6c8;
+}
