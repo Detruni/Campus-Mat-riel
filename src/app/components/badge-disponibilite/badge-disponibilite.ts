@@ -12,10 +12,12 @@ import { Component, input } from '@angular/core';
   styles: `
     .badge-disponible {
       background: var(--succes-fond);
+      border-color: var(--succes);
       color: var(--succes);
     }
     .badge-reserve {
       background: var(--danger-fond);
+      border-color: var(--danger);
       color: var(--danger);
     }
   `

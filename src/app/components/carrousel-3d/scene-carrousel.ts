@@ -1,35 +1,35 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { Categorie } from '../../data/donnees-initiales';
-import { creerModele } from './modeles-3d';
 
 /**
- * Scène Three.js du carrousel : une "pochette" par équipement avec l'objet en 3D devant.
- * La classe ne connaît pas Angular : le composant lui donne la liste des éléments et
- * l'indice à afficher, et elle le prévient quand l'utilisateur change d'élément.
+ * Scène Three.js du carrousel : une "pochette" par élément avec un objet en 3D devant.
+ * La classe ne connaît pas Angular ni les équipements : on lui donne des éléments déjà
+ * prêts (textes, couleurs, modèle 3D) et elle prévient quand l'utilisateur change d'élément.
  */
 
 export interface ElementCarrousel {
-  id: number;
-  nom: string;
-  categorie: Categorie;
-  disponible: boolean;
+  cle: number;
+  // Nom lu par les lecteurs d'écran (boutons de navigation)
+  libelle: string;
+  // Textes de la pastille ronde collée sur la pochette
+  pastille: string;
+  petitTexte: string;
+  couleur: string;
+  couleurPastille: string;
+  // Étiquette rectangulaire en bas à droite (disponible, réservé...)
+  etiquette?: { texte: string; couleur: string };
+  // Couleurs du fond de la page quand l'élément est au centre
+  fond: [string, string];
+  modele: () => THREE.Group;
 }
 
 export interface RappelsCarrousel {
-  // Demande de changement d'élément (clic sur une pochette voisine, glisser, flèches)
+  // Demande de changement d'élément (clic sur une pochette voisine, glisser)
   aller(indice: number): void;
-  ouvrir(id: number): void;
+  // Double-clic sur la pochette du centre
+  ouvrir(indice: number): void;
 }
-
-// Couleurs des pochettes par catégorie : [fond de la pochette, pastille]
-export const COULEURS_CATEGORIES: Record<Categorie, [string, string]> = {
-  Informatique: ['#6f6cf5', '#ffd23f'],
-  Projection: ['#ff7a1a', '#f05a9d'],
-  Photo: ['#f5b400', '#ef3e36'],
-  Audio: ['#39b85a', '#5b5bf0']
-};
 
 const TAILLE_POCHETTE = 2;
 const ECART = 2.35;
@@ -54,7 +54,6 @@ export class SceneCarrousel {
   private readonly sansAnimation = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   private pochettes: Pochette[] = [];
-  private elements: ElementCarrousel[] = [];
   private indice = 0;
   // Position affichée, qui rejoint l'indice en douceur (c'est elle qui crée l'animation)
   private position = 0;
@@ -95,7 +94,8 @@ export class SceneCarrousel {
     lumiere.shadow.normalBias = 0.02;
     this.scene.add(lumiere);
 
-    this.camera.position.set(0, 0.15, 7.2);
+    // La caméra est placée un peu haut : la pochette descend entre les filtres et la capsule
+    this.camera.position.set(0, 0.45, 8);
 
     this.brancherEvenements(canvas);
     this.observateur = new ResizeObserver(() => this.redimensionner());
@@ -111,7 +111,6 @@ export class SceneCarrousel {
       this.scene.remove(pochette.groupe);
       liberer(pochette.groupe);
     }
-    this.elements = elements;
     this.pochettes = elements.map((element, i) => this.creerPochette(element, i));
     this.pochettes.forEach(p => this.scene.add(p.groupe));
     this.allerA(indice, true);
@@ -135,7 +134,7 @@ export class SceneCarrousel {
   // ---------------------------------------------------------------------------
 
   private creerPochette(element: ElementCarrousel, i: number): Pochette {
-    const [couleur, couleurPastille] = COULEURS_CATEGORIES[element.categorie];
+    const { couleur, couleurPastille } = element;
     const groupe = new THREE.Group();
 
     // La pochette : un carré épais avec un vernis brillant, comme un vinyle sous plastique
@@ -155,7 +154,7 @@ export class SceneCarrousel {
     disque.receiveShadow = true;
     groupe.add(disque);
 
-    // Pastille ronde façon autocollant, avec le nom de l'équipement
+    // Pastille ronde façon autocollant
     const pastille = new THREE.Mesh(
       new THREE.CircleGeometry(0.36, 48),
       new THREE.MeshBasicMaterial({ map: texturePastille(element, couleurPastille), toneMapped: false })
@@ -164,16 +163,17 @@ export class SceneCarrousel {
     pastille.rotation.z = 0.12;
     groupe.add(pastille);
 
-    // Étiquette rectangulaire en bas à droite : disponible ou réservé
-    const etiquette = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.62, 0.2),
-      new THREE.MeshBasicMaterial({ map: textureEtiquette(element.disponible), toneMapped: false })
-    );
-    etiquette.position.set(0.58, -0.76, 0.036);
-    groupe.add(etiquette);
+    if (element.etiquette) {
+      const etiquette = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.62, 0.2),
+        new THREE.MeshBasicMaterial({ map: textureEtiquette(element.etiquette.texte, element.etiquette.couleur), toneMapped: false })
+      );
+      etiquette.position.set(0.58, -0.76, 0.036);
+      groupe.add(etiquette);
+    }
 
     // L'objet en 3D, posé devant la pochette
-    const modele = creerModele(element.nom, element.categorie);
+    const modele = element.modele();
     modele.scale.setScalar(ECHELLE_OBJET);
     modele.position.set(0, -0.62, 0.45);
     modele.traverse(objet => {
@@ -184,7 +184,7 @@ export class SceneCarrousel {
     groupe.userData['indice'] = i;
     groupe.traverse(objet => (objet.userData['indice'] = i));
 
-    return { groupe, modele, penche: ((element.id * 37) % 9 - 4) * 0.012 };
+    return { groupe, modele, penche: ((element.cle * 37) % 9 - 4) * 0.012 };
   }
 
   private image(): void {
@@ -265,7 +265,7 @@ export class SceneCarrousel {
 
     ecouter('dblclick', e => {
       const indice = this.pochetteSous(e);
-      if (indice !== null && indice === this.indice) this.rappels.ouvrir(this.elements[indice].id);
+      if (indice !== null && indice === this.indice) this.rappels.ouvrir(indice);
     });
   }
 
@@ -287,8 +287,9 @@ export class SceneCarrousel {
     if (largeur === 0 || hauteur === 0) return;
     this.renderer.setSize(largeur, hauteur);
     this.camera.aspect = largeur / hauteur;
-    // Sur un écran étroit on recule la caméra pour garder la pochette entière
-    this.camera.position.z = largeur < 640 ? 8.2 : 7.2;
+    // Sur mobile la scène est un bloc à part (sans filtres par-dessus) : pochette centrée
+    const mobile = largeur < 760;
+    this.camera.position.set(0, mobile ? 0.05 : 0.45, mobile ? 4.9 : 8);
     this.camera.updateProjectionMatrix();
   }
 }
@@ -333,28 +334,28 @@ function texturePastille(element: ElementCarrousel, couleur: string): THREE.Canv
     ctx.fillStyle = '#111111';
     ctx.textAlign = 'center';
     ctx.font = '800 64px "Libre Franklin", system-ui, sans-serif';
-    const lignes = decouper(ctx, element.nom.toLowerCase(), 380);
+    const lignes = decouper(ctx, element.pastille.toLowerCase(), 380);
     const debut = 256 - (lignes.length - 1) * 34;
     lignes.forEach((ligne, i) => ctx.fillText(ligne, 256, debut + i * 68));
 
     ctx.font = '600 34px "Libre Franklin", system-ui, sans-serif';
-    ctx.fillText(`n° ${element.id} · ${element.categorie.toLowerCase()}`, 256, 430);
+    ctx.fillText(element.petitTexte.toLowerCase(), 256, 430);
   });
 }
 
-function textureEtiquette(disponible: boolean): THREE.CanvasTexture {
+function textureEtiquette(texte: string, couleur: string): THREE.CanvasTexture {
   return textureCanvas(310, 100, ctx => {
     ctx.fillStyle = '#111111';
     ctx.fillRect(0, 0, 310, 100);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(6, 6, 298, 88);
-    ctx.fillStyle = disponible ? '#15803d' : '#b91c1c';
+    ctx.fillStyle = couleur;
     ctx.fillRect(12, 12, 286, 76);
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = '800 40px "Libre Franklin", system-ui, sans-serif';
-    ctx.fillText(disponible ? 'DISPONIBLE' : 'RÉSERVÉ', 155, 52);
+    ctx.fillText(texte.toUpperCase(), 155, 52);
   });
 }
 

@@ -1,6 +1,8 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BadgeDisponibilite } from '../../components/badge-disponibilite/badge-disponibilite';
+import { Carrousel3d } from '../../components/carrousel-3d/carrousel-3d';
+import { elementsEquipements } from '../../components/carrousel-3d/elements';
 import { CatalogueService } from '../../services/catalogue.service';
 import { ReservationService } from '../../services/reservation.service';
 import { Resultat } from '../../services/resultat';
@@ -8,9 +10,8 @@ import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-fiche-materiel',
-  imports: [RouterLink, BadgeDisponibilite],
-  templateUrl: './fiche-materiel.html',
-  styleUrl: './fiche-materiel.css'
+  imports: [RouterLink, BadgeDisponibilite, Carrousel3d],
+  templateUrl: './fiche-materiel.html'
 })
 export class FicheMateriel {
   // Rempli par le routeur grâce à withComponentInputBinding (/materiels/:id)
@@ -40,6 +41,13 @@ export class FicheMateriel {
   });
 
   readonly message = signal<Resultat | null>(null);
+
+  // Une seule pochette en 3D : celle de l'équipement
+  readonly indice = signal(0);
+  readonly elements = computed(() => {
+    const equipement = this.equipement();
+    return equipement ? elementsEquipements([equipement], this.reservations.idsReserves()) : [];
+  });
 
   reserver(equipementId: number): void {
     this.message.set(this.reservations.reserver(equipementId));

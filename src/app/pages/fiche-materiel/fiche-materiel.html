@@ -1,67 +1,58 @@
-<p><a routerLink="/catalogue">&larr; Retour au catalogue</a></p>
-
 @if (equipement(); as e) {
-  <article class="fiche">
-    <div class="fiche-haut">
-      <h1>{{ e.nom }}</h1>
-      <app-badge-disponibilite [disponible]="disponible()" />
+  <app-carrousel-3d
+    [libelle]="'Fiche de ' + e.nom"
+    [elements]="elements()"
+    [(indice)]="indice"
+    [navigation]="false"
+  >
+    <div haut>
+      <a routerLink="/catalogue" class="bouton bouton-secondaire">&larr; Retour au catalogue</a>
+      <h1 class="titre-page">{{ e.nom }}</h1>
+
+      @if (message(); as m) {
+        <p class="alerte" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
+          {{ m.message }}
+        </p>
+      }
     </div>
 
-    <dl class="infos">
-      <div>
-        <dt>Identifiant</dt>
-        <dd>{{ e.id }}</dd>
-      </div>
-      <div>
-        <dt>Catégorie</dt>
-        <dd>{{ e.categorie }}</dd>
-      </div>
-      <div>
-        <dt>Localisation</dt>
-        <dd>{{ e.localisation }}</dd>
-      </div>
-      <div class="infos-large">
-        <dt>Description</dt>
-        <dd>{{ e.description }}</dd>
-      </div>
-    </dl>
-
-    @if (session.estResponsable()) {
-      <p class="actions">
-        <a [routerLink]="['/gestion', e.id, 'modifier']" class="bouton">Modifier cette fiche</a>
-      </p>
-    }
-
-    @if (session.estEtudiant()) {
-      <section class="zone-reservation" aria-labelledby="titre-reservation">
-        <h2 id="titre-reservation">Réservation</h2>
-
-        @if (maReservation(); as reservation) {
-          <p>Vous avez réservé cet équipement. Il reste à vous jusqu'à l'annulation.</p>
-          <p class="actions">
-            <button type="button" class="bouton-danger" (click)="annuler(reservation.id)">
-              Annuler ma réservation
-            </button>
-            <a routerLink="/mes-reservations" class="bouton bouton-secondaire">Mes réservations</a>
+    <div capsule>
+      <div class="capsule-contenu">
+        <div class="capsule-infos">
+          <p class="capsule-sous-titre">
+            n° {{ e.id }} · {{ e.categorie }} · {{ e.localisation }}
+            <app-badge-disponibilite [disponible]="disponible()" />
           </p>
-        } @else if (disponible()) {
-          <p>Cet équipement est disponible.</p>
-          <button type="button" (click)="reserver(e.id)">Réserver cet équipement</button>
-        } @else {
-          <p class="alerte alerte-erreur">
-            Cet équipement est déjà réservé par un autre étudiant :
-            vous ne pouvez pas le réserver tant que sa réservation n'est pas annulée.
-          </p>
-        }
+          <p class="capsule-texte">{{ e.description }}</p>
+        </div>
 
-        @if (message(); as m) {
-          <p class="alerte message" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
-            {{ m.message }}
-          </p>
-        }
-      </section>
-    }
-  </article>
+        <div class="capsule-actions">
+          @if (session.estResponsable()) {
+            <a [routerLink]="['/gestion', e.id, 'modifier']" class="pilule pilule-pleine">Modifier cette fiche</a>
+          }
+
+          @if (session.estEtudiant()) {
+            @if (maReservation(); as reservation) {
+              <span class="capsule-note">Vous avez réservé cet équipement.</span>
+              <button type="button" class="pilule pilule-danger" (click)="annuler(reservation.id)">
+                Annuler ma réservation
+              </button>
+              <a routerLink="/mes-reservations" class="pilule">Mes réservations</a>
+            } @else if (disponible()) {
+              <button type="button" class="pilule pilule-pleine" (click)="reserver(e.id)">
+                Réserver cet équipement
+              </button>
+            } @else {
+              <span class="capsule-note">
+                Déjà réservé par un autre étudiant : vous ne pouvez pas le réserver
+                tant que sa réservation n'est pas annulée.
+              </span>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </app-carrousel-3d>
 } @else {
   <section class="page-message">
     <h1>Équipement introuvable</h1>

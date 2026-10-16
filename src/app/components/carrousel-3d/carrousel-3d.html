@@ -1,16 +1,10 @@
-<section
-  class="carrousel"
-  aria-roledescription="carrousel"
-  aria-label="Équipements du catalogue"
-  [style.--fond-a]="fond()[0]"
-  [style.--fond-b]="fond()[1]"
->
+<section class="carrousel" aria-roledescription="carrousel" [attr.aria-label]="libelle()">
   <div
     class="scene"
     #scene
     tabindex="0"
     role="group"
-    aria-label="Vue 3D des équipements. Flèches gauche et droite pour changer d'équipement, Entrée pour ouvrir la fiche."
+    [attr.aria-label]="libelle() + ' en 3D. Flèches gauche et droite pour changer, Entrée pour ouvrir.'"
     (keydown)="clavier($event)"
     (wheel)="molette($event)"
   >
@@ -19,57 +13,59 @@
     }
   </div>
 
-  @if (courant(); as e) {
+  <!-- Zone du haut : titre, filtres, messages fournis par la page -->
+  <div class="haut">
+    <ng-content select="[haut]" />
+  </div>
+
+  <div class="bas">
     <div class="capsule">
-      <button
-        type="button"
-        class="fleche"
-        (click)="precedent()"
-        [disabled]="indice() === 0"
-        aria-label="Équipement précédent"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
-      </button>
+      @if (navigation()) {
+        <button
+          type="button"
+          class="fleche"
+          (click)="precedent()"
+          [disabled]="indice() <= 0"
+          aria-label="Élément précédent"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
+        </button>
+      }
 
-      <div class="infos" aria-live="polite">
-        <p class="titre">
-          <span class="numero">{{ numero(indice() + 1) }}.</span>{{ e.nom }}
-        </p>
-        <p class="sous-titre">
-          {{ e.categorie }} · {{ e.localisation }}
-          <app-badge-disponibilite [disponible]="!reserves().has(e.id)" />
-        </p>
+      <div class="contenu-capsule">
+        <ng-content select="[capsule]" />
       </div>
 
-      <!-- Les actions de l'équipement affiché, directement dans la capsule -->
-      <div class="actions-capsule">
-        <a [routerLink]="['/materiels', e.id]" class="bouton-pilule">
-          Voir la fiche <span class="visuellement-cache">« {{ e.nom }} »</span>
-        </a>
-        @if (peutReserver()) {
-          @if (mesReservations().has(e.id)) {
-            <span class="note">Réservé par vous</span>
-          } @else if (!reserves().has(e.id)) {
-            <button type="button" class="bouton-pilule plein" (click)="reserver.emit(e.id)">
-              Réserver <span class="visuellement-cache">{{ e.nom }}</span>
-            </button>
-          } @else {
-            <span class="note">Déjà réservé</span>
-          }
-        }
-      </div>
-
-      <button
-        type="button"
-        class="fleche"
-        (click)="suivant()"
-        [disabled]="indice() === equipements().length - 1"
-        aria-label="Équipement suivant"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
-      </button>
+      @if (navigation()) {
+        <button
+          type="button"
+          class="fleche"
+          (click)="suivant()"
+          [disabled]="indice() >= elements().length - 1"
+          aria-label="Élément suivant"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+        </button>
+      }
     </div>
 
-    <p class="compteur" aria-hidden="true">{{ numero(indice() + 1) }} / {{ numero(equipements().length) }}</p>
-  }
+    <!-- Points de navigation : un bouton par élément, pratique au clavier -->
+    @if (navigation() && elements().length > 1) {
+      <ul class="points">
+        @for (element of elements(); track element.cle; let i = $index) {
+          <li>
+            <button
+              type="button"
+              class="point"
+              [class.actif]="i === indice()"
+              [attr.aria-current]="i === indice() ? 'true' : null"
+              (click)="aller(i)"
+            >
+              <span class="visuellement-cache">Aller à {{ element.libelle }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
 </section>

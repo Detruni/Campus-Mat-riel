@@ -1,69 +1,87 @@
-<h1>Catalogue du matériel</h1>
+<h1 class="visuellement-cache">Catalogue du matériel</h1>
 
-<form class="filtres" role="search" (submit)="$event.preventDefault()">
-  <div class="champ">
-    <label for="recherche">Rechercher par nom</label>
-    <input
-      id="recherche"
-      type="search"
-      #champRecherche
-      placeholder="Ex. : ordinateur"
-      [value]="recherche()"
-      (input)="changerFiltres({ q: champRecherche.value || null })"
-    />
+<app-carrousel-3d
+  libelle="Catalogue du matériel"
+  [elements]="elements()"
+  [(indice)]="indice"
+  (ouvrir)="ouvrir($event)"
+>
+  <div haut>
+    <form class="filtres autocollant" role="search" (submit)="$event.preventDefault()">
+      <div class="champ">
+        <label for="recherche">Rechercher par nom</label>
+        <input
+          id="recherche"
+          type="search"
+          #champRecherche
+          placeholder="Ex. : ordinateur"
+          [value]="recherche()"
+          (input)="changerFiltres({ q: champRecherche.value || null })"
+        />
+      </div>
+
+      <div class="champ">
+        <label for="categorie">Catégorie</label>
+        <select
+          id="categorie"
+          #champCategorie
+          (change)="changerFiltres({ categorie: champCategorie.value || null })"
+        >
+          <option value="" [selected]="categorie() === ''">
+            Toutes les catégories ({{ catalogue.equipements().length }})
+          </option>
+          @for (c of categories; track c) {
+            <option [value]="c" [selected]="c === categorie()">{{ c }} ({{ compteurs()[c] ?? 0 }})</option>
+          }
+        </select>
+      </div>
+    </form>
+
+    <p class="resultat" role="status">{{ equipementsVisibles().length }} équipement(s) affiché(s)</p>
+
+    @if (message(); as m) {
+      <p class="alerte" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
+        {{ m.message }}
+      </p>
+    }
   </div>
 
-  <div class="champ">
-    <label for="categorie">Catégorie</label>
-    <select
-      id="categorie"
-      #champCategorie
-      (change)="changerFiltres({ categorie: champCategorie.value || null })"
-    >
-      <option value="" [selected]="categorie() === ''">
-        Toutes les catégories ({{ catalogue.equipements().length }})
-      </option>
-      @for (c of categories; track c) {
-        <option [value]="c" [selected]="c === categorie()">{{ c }} ({{ compteurs()[c] ?? 0 }})</option>
-      }
-    </select>
+  <div capsule>
+    @if (catalogue.equipements().length === 0) {
+      <p class="capsule-titre">Le catalogue est vide pour le moment.</p>
+    } @else if (!courant()) {
+      <div class="capsule-contenu">
+        <p class="capsule-titre capsule-infos">Aucun équipement ne correspond à vos critères de recherche.</p>
+        <button type="button" class="pilule pilule-pleine" (click)="effacerFiltres()">Effacer les filtres</button>
+      </div>
+    } @else {
+      @let e = courant()!;
+      <div class="capsule-contenu" aria-live="polite">
+        <div class="capsule-infos">
+          <p class="capsule-titre">{{ numero(indice() + 1) }}. {{ e.nom }}</p>
+          <p class="capsule-sous-titre">
+            {{ e.categorie }} · {{ e.localisation }}
+            <app-badge-disponibilite [disponible]="reservations.estDisponible(e.id)" />
+          </p>
+        </div>
+
+        <div class="capsule-actions">
+          <a [routerLink]="['/materiels', e.id]" class="pilule">
+            Voir la fiche <span class="visuellement-cache">« {{ e.nom }} »</span>
+          </a>
+          @if (session.estEtudiant()) {
+            @if (mesIds().has(e.id)) {
+              <span class="capsule-note">Réservé par vous</span>
+            } @else if (reservations.estDisponible(e.id)) {
+              <button type="button" class="pilule pilule-pleine" (click)="reserver(e.id)">
+                Réserver <span class="visuellement-cache">{{ e.nom }}</span>
+              </button>
+            } @else {
+              <span class="capsule-note">Déjà réservé</span>
+            }
+          }
+        </div>
+      </div>
+    }
   </div>
-</form>
-
-<p class="resultat" role="status">
-  {{ equipementsVisibles().length }} équipement(s) affiché(s)
-</p>
-
-@if (message(); as m) {
-  <p class="alerte" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
-    {{ m.message }}
-  </p>
-}
-
-@if (catalogue.equipements().length === 0) {
-  <p class="alerte alerte-info">Le catalogue est vide pour le moment.</p>
-} @else if (equipementsVisibles().length === 0) {
-  <div class="vide">
-    <p class="alerte alerte-info">
-      Aucun équipement ne correspond à vos critères de recherche.
-    </p>
-    <button type="button" class="bouton-secondaire" (click)="effacerFiltres()">
-      Effacer les filtres
-    </button>
-  </div>
-} @else {
-  <!-- @defer : le carrousel et Three.js sont téléchargés à part, la page s'affiche plus vite -->
-  @defer (on immediate) {
-    <app-carrousel-3d
-      [equipements]="equipementsVisibles()"
-      [reserves]="reservations.idsReserves()"
-      [mesReservations]="mesIds()"
-      [peutReserver]="session.estEtudiant()"
-      (reserver)="reserver($event)"
-    />
-  } @loading (minimum 300ms) {
-    <p class="chargement" role="status">Chargement du catalogue en 3D…</p>
-  } @error {
-    <p class="alerte alerte-erreur">Le carrousel n'a pas pu être chargé. Rechargez la page.</p>
-  }
-}
+</app-carrousel-3d>
