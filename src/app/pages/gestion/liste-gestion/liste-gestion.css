@@ -11,8 +11,11 @@
   margin: 0;
 }
 
-/* Permet de faire défiler le tableau sur petit écran */
+/* Permet de faire défiler le tableau sur petit écran.
+   position: relative garde les textes cachés (lecteurs d'écran) à l'intérieur du conteneur,
+   sinon ils élargissent toute la page sur mobile. */
 .tableau-conteneur {
+  position: relative;
   overflow-x: auto;
   margin-top: 1rem;
   background: var(--fond-carte);
