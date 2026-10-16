@@ -22,8 +22,8 @@ export const routes: Routes = [
   {
     path: 'materiels/:id',
     canActivate: [connexionGuard],
-    loadComponent: () => import('./pages/fiche-materiel/fiche-materiel').then(m => m.FicheMateriel),
-    title: 'Fiche matériel - Campus Matériel'
+    // Pas de titre fixe ici : la fiche met le nom de l'équipement dans l'onglet
+    loadComponent: () => import('./pages/fiche-materiel/fiche-materiel').then(m => m.FicheMateriel)
   },
   {
     path: 'mes-reservations',
