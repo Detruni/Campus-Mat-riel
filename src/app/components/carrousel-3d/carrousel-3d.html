@@ -35,10 +35,29 @@
         <p class="titre">
           <span class="numero">{{ numero(indice() + 1) }}.</span>{{ e.nom }}
         </p>
-        <p class="sous-titre">{{ e.categorie }} · {{ e.localisation }}</p>
+        <p class="sous-titre">
+          {{ e.categorie }} · {{ e.localisation }}
+          <app-badge-disponibilite [disponible]="!reserves().has(e.id)" />
+        </p>
       </div>
 
-      <app-badge-disponibilite [disponible]="!reserves().has(e.id)" />
+      <!-- Les actions de l'équipement affiché, directement dans la capsule -->
+      <div class="actions-capsule">
+        <a [routerLink]="['/materiels', e.id]" class="bouton-pilule">
+          Voir la fiche <span class="visuellement-cache">« {{ e.nom }} »</span>
+        </a>
+        @if (peutReserver()) {
+          @if (mesReservations().has(e.id)) {
+            <span class="note">Réservé par vous</span>
+          } @else if (!reserves().has(e.id)) {
+            <button type="button" class="bouton-pilule plein" (click)="reserver.emit(e.id)">
+              Réserver <span class="visuellement-cache">{{ e.nom }}</span>
+            </button>
+          } @else {
+            <span class="note">Déjà réservé</span>
+          }
+        }
+      </div>
 
       <button
         type="button"
@@ -49,21 +68,6 @@
       >
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
       </button>
-    </div>
-
-    <div class="actions-carrousel">
-      <a [routerLink]="['/materiels', e.id]" class="bouton-pilule">Voir la fiche</a>
-      @if (peutReserver()) {
-        @if (mesReservations().has(e.id)) {
-          <p class="note">Vous avez réservé cet équipement.</p>
-        } @else if (!reserves().has(e.id)) {
-          <button type="button" class="bouton-pilule plein" (click)="reserver.emit(e.id)">
-            Réserver <span class="visuellement-cache">{{ e.nom }}</span>
-          </button>
-        } @else {
-          <p class="note">Déjà réservé par un autre étudiant.</p>
-        }
-      }
     </div>
 
     <p class="compteur" aria-hidden="true">{{ numero(indice() + 1) }} / {{ numero(equipements().length) }}</p>
