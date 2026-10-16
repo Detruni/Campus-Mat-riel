@@ -38,6 +38,17 @@
   </div>
 }
 
+@if (chargement()) {
+  <p class="alerte indicateur-chargement" role="status">Chargement de la page…</p>
+}
+
+@if (pageEnErreur()) {
+  <div class="alerte alerte-erreur bandeau" role="alert">
+    <span>La page n'a pas pu être chargée. Vérifiez votre connexion puis réessayez.</span>
+    <button type="button" class="bouton-secondaire" (click)="reessayer()">Réessayer</button>
+  </div>
+}
+
 <main id="contenu">
   <router-outlet />
 </main>
