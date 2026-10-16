@@ -54,34 +54,16 @@
         <p class="capsule-titre capsule-infos">Aucun équipement ne correspond à vos critères de recherche.</p>
         <button type="button" class="pilule pilule-pleine" (click)="effacerFiltres()">Effacer les filtres</button>
       </div>
-    } @else {
-      @let e = courant()!;
-      <div class="capsule-contenu" aria-live="polite">
-        <div class="capsule-infos">
-          <p class="capsule-titre">{{ numero(indice() + 1) }}. {{ e.nom }}</p>
-          <p class="capsule-sous-titre">
-            {{ e.categorie }} · {{ e.localisation }}
-            <app-badge-disponibilite [disponible]="reservations.estDisponible(e.id)" />
-          </p>
-        </div>
-
-        <div class="capsule-actions">
-          <a [routerLink]="['/materiels', e.id]" class="pilule">
-            Voir la fiche <span class="visuellement-cache">« {{ e.nom }} »</span>
-          </a>
-          @if (session.estEtudiant()) {
-            @if (mesIds().has(e.id)) {
-              <span class="capsule-note">Réservé par vous</span>
-            } @else if (reservations.estDisponible(e.id)) {
-              <button type="button" class="pilule pilule-pleine" (click)="reserver(e.id)">
-                Réserver <span class="visuellement-cache">{{ e.nom }}</span>
-              </button>
-            } @else {
-              <span class="capsule-note">Déjà réservé</span>
-            }
-          }
-        </div>
-      </div>
+    } @else if (courant(); as e) {
+      <!-- La capsule reçoit l'équipement et transmet la demande de réservation (output "reserver") -->
+      <app-capsule-equipement
+        [equipement]="e"
+        [numero]="numero(indice() + 1)"
+        [disponible]="reservations.estDisponible(e.id)"
+        [peutReserver]="session.estEtudiant()"
+        [reserveParMoi]="mesIds().has(e.id)"
+        (reserver)="reserver($event)"
+      />
     }
   </div>
 </app-carrousel-3d>
