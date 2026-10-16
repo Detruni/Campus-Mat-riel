@@ -1,0 +1,37 @@
+.carte-connexion {
+  max-width: 32rem;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.liste-comptes {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.bouton-compte {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--fond);
+  color: var(--texte);
+  border: 1px solid var(--bordure);
+  text-align: left;
+}
+
+.bouton-compte:hover {
+  border-color: var(--primaire);
+  background: var(--fond-carte);
+}
+
+.nom-compte {
+  font-weight: 600;
+}

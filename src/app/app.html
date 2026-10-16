@@ -1,6 +1,31 @@
 <header class="entete">
-  <p class="logo">Campus Matériel</p>
+  <div class="entete-contenu">
+    <a routerLink="/" class="logo">Campus Matériel</a>
+
+    <nav aria-label="Menu principal" class="menu">
+      @if (session.utilisateur(); as utilisateur) {
+        <a routerLink="/catalogue" routerLinkActive="actif" ariaCurrentWhenActive="page">Catalogue</a>
+
+        <span class="utilisateur">
+          {{ utilisateur.nom }}
+          <span class="badge">{{ libellesRoles[utilisateur.role] }}</span>
+        </span>
+        <button type="button" class="bouton-secondaire" (click)="session.deconnecter()">
+          Se déconnecter
+        </button>
+      } @else {
+        <a routerLink="/login" routerLinkActive="actif" ariaCurrentWhenActive="page">Connexion</a>
+      }
+    </nav>
+  </div>
 </header>
+
+@if (stockage.erreur(); as erreur) {
+  <div class="alerte alerte-erreur bandeau" role="alert">
+    <span>{{ erreur }}</span>
+    <button type="button" class="bouton-secondaire" (click)="stockage.fermerErreur()">Fermer</button>
+  </div>
+}
 
 <main id="contenu">
   <router-outlet />

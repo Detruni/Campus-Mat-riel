@@ -1,0 +1,67 @@
+.entete {
+  background: var(--primaire-fonce);
+  color: #fff;
+}
+
+.entete-contenu {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.logo {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-decoration: none;
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menu a {
+  color: #fff;
+  text-decoration: none;
+  padding: 0.25rem 0;
+  border-bottom: 2px solid transparent;
+}
+
+.menu a:hover {
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Lien de la page courante */
+.menu a.actif {
+  font-weight: 700;
+  border-bottom-color: #fff;
+}
+
+.utilisateur {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bandeau {
+  max-width: 64rem;
+  margin: 1rem auto 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+main {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
