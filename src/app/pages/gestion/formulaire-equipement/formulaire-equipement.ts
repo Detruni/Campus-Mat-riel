@@ -3,6 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { CATEGORIES, Categorie } from '../../../data/donnees-initiales';
 import { CatalogueService, DonneesEquipement } from '../../../services/catalogue.service';
+import { MessageService } from '../../../services/message.service';
 import { Resultat } from '../../../services/resultat';
 import { longueurMin, obligatoire } from './validateurs';
 
@@ -31,6 +32,7 @@ export class FormulaireEquipement implements OnInit {
 
   private readonly catalogue = inject(CatalogueService);
   private readonly router = inject(Router);
+  private readonly messages = inject(MessageService);
 
   readonly categories = CATEGORIES;
   readonly enModification = computed(() => this.id() !== undefined);
@@ -119,7 +121,8 @@ export class FormulaireEquipement implements OnInit {
       message = { ok: true, message: `« ${cree.nom} » a été ajouté au catalogue (id ${cree.id}).` };
     }
 
-    // Le message est transmis à la liste de gestion via l'état de navigation
-    this.router.navigate(['/gestion'], { state: { message } });
+    // Le message est confié au MessageService, la liste de gestion l'affichera
+    this.messages.transmettre(message);
+    this.router.navigate(['/gestion']);
   }
 }

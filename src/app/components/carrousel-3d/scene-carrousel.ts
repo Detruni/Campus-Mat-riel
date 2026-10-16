@@ -114,14 +114,15 @@ export class SceneCarrousel {
   }
 
   /** Reconstruit les pochettes (appelé quand la liste filtrée ou les disponibilités changent). */
-  afficher(elements: ElementCarrousel[], indice: number): void {
+  afficher(elements: ElementCarrousel[]): void {
     for (const pochette of this.pochettes) {
       this.scene.remove(pochette.groupe);
       liberer(pochette.groupe);
     }
     this.pochettes = elements.map((element, i) => this.creerPochette(element, i));
     this.pochettes.forEach(p => this.scene.add(p.groupe));
-    this.allerA(indice, true);
+    // Si la liste a raccourci, on se place sur le dernier élément qui existe
+    this.allerA(Math.min(this.indice, Math.max(elements.length - 1, 0)), true);
   }
 
   /**
