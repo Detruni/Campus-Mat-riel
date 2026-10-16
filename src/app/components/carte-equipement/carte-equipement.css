@@ -1,0 +1,40 @@
+.carte {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.carte-haut {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.categorie {
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.carte-titre {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.description {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.localisation {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--texte-doux);
+}

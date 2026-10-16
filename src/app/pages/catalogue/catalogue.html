@@ -1,0 +1,57 @@
+<h1>Catalogue du matériel</h1>
+
+<form class="filtres" role="search" (submit)="$event.preventDefault()">
+  <div class="champ">
+    <label for="recherche">Rechercher par nom</label>
+    <input
+      id="recherche"
+      type="search"
+      #champRecherche
+      placeholder="Ex. : ordinateur"
+      [value]="recherche()"
+      (input)="recherche.set(champRecherche.value)"
+    />
+  </div>
+
+  <div class="champ">
+    <label for="categorie">Catégorie</label>
+    <select
+      id="categorie"
+      #champCategorie
+      (change)="categorie.set(champCategorie.value)"
+    >
+      <option value="" [selected]="categorie() === ''">Toutes les catégories</option>
+      @for (c of categories; track c) {
+        <option [value]="c" [selected]="c === categorie()">{{ c }}</option>
+      }
+    </select>
+  </div>
+</form>
+
+<p class="resultat" role="status">
+  {{ equipementsVisibles().length }} équipement(s) affiché(s)
+</p>
+
+@if (catalogue.equipements().length === 0) {
+  <p class="alerte alerte-info">Le catalogue est vide pour le moment.</p>
+} @else {
+  <ul class="grille">
+    @for (equipement of equipementsVisibles(); track equipement.id) {
+      <li>
+        <app-carte-equipement
+          [equipement]="equipement"
+          [disponible]="reservations.estDisponible(equipement.id)"
+        />
+      </li>
+    } @empty {
+      <li class="vide">
+        <p class="alerte alerte-info">
+          Aucun équipement ne correspond à vos critères de recherche.
+        </p>
+        <button type="button" class="bouton-secondaire" (click)="effacerFiltres()">
+          Effacer les filtres
+        </button>
+      </li>
+    }
+  </ul>
+}
