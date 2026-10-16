@@ -5,6 +5,11 @@
     <nav aria-label="Menu principal" class="menu">
       @if (session.utilisateur(); as utilisateur) {
         <a routerLink="/catalogue" routerLinkActive="actif" ariaCurrentWhenActive="page">Catalogue</a>
+        @if (session.estEtudiant()) {
+          <a routerLink="/mes-reservations" routerLinkActive="actif" ariaCurrentWhenActive="page">
+            Mes réservations
+          </a>
+        }
 
         <span class="utilisateur">
           {{ utilisateur.nom }}

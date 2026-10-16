@@ -32,6 +32,12 @@
   {{ equipementsVisibles().length }} équipement(s) affiché(s)
 </p>
 
+@if (message(); as m) {
+  <p class="alerte" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
+    {{ m.message }}
+  </p>
+}
+
 @if (catalogue.equipements().length === 0) {
   <p class="alerte alerte-info">Le catalogue est vide pour le moment.</p>
 } @else {
@@ -41,6 +47,9 @@
         <app-carte-equipement
           [equipement]="equipement"
           [disponible]="reservations.estDisponible(equipement.id)"
+          [peutReserver]="session.estEtudiant()"
+          [reserveParMoi]="estReserveParMoi(equipement.id)"
+          (reserver)="reserver($event)"
         />
       </li>
     } @empty {
