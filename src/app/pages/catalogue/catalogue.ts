@@ -1,8 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
-import { BadgeDisponibilite } from '../../components/badge-disponibilite/badge-disponibilite';
+import { CapsuleEquipement } from '../../components/capsule-equipement/capsule-equipement';
 import { Carrousel3d } from '../../components/carrousel-3d/carrousel-3d';
 import { elementsEquipements } from '../../components/carrousel-3d/elements';
 import { CATEGORIES, Categorie } from '../../data/donnees-initiales';
@@ -13,7 +13,7 @@ import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-catalogue',
-  imports: [Carrousel3d, BadgeDisponibilite, RouterLink],
+  imports: [Carrousel3d, CapsuleEquipement],
   templateUrl: './catalogue.html'
 })
 export class Catalogue {
@@ -93,10 +93,10 @@ export class Catalogue {
     return String(n).padStart(2, '0');
   }
 
+  // Appelé quand la capsule émet "reserver"
   reserver(equipementId: number): void {
     this.message.set(this.reservations.reserver(equipementId));
   }
-
 
   effacerFiltres(): void {
     this.changerFiltres({ q: null, categorie: null });

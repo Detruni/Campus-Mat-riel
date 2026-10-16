@@ -1,0 +1,26 @@
+<div class="capsule-contenu" aria-live="polite">
+  <div class="capsule-infos">
+    <p class="capsule-titre">{{ numero() }}. {{ equipement().nom }}</p>
+    <p class="capsule-sous-titre">
+      {{ equipement().categorie }} · {{ equipement().localisation }}
+      <app-badge-disponibilite [disponible]="disponible()" />
+    </p>
+  </div>
+
+  <div class="capsule-actions">
+    <a [routerLink]="['/materiels', equipement().id]" class="pilule">
+      Voir la fiche <span class="visuellement-cache">« {{ equipement().nom }} »</span>
+    </a>
+    @if (peutReserver()) {
+      @if (reserveParMoi()) {
+        <span class="capsule-note">Réservé par vous</span>
+      } @else if (disponible()) {
+        <button type="button" class="pilule pilule-pleine" (click)="reserver.emit(equipement().id)">
+          Réserver <span class="visuellement-cache">{{ equipement().nom }}</span>
+        </button>
+      } @else {
+        <span class="capsule-note">Déjà réservé</span>
+      }
+    }
+  </div>
+</div>
