@@ -44,6 +44,14 @@ export class CatalogueService {
     // Chaque modification du catalogue est sauvegardée automatiquement
     effect(() => this.stockage.ecrire(CLE_EQUIPEMENTS, this.etat()));
     effect(() => this.stockage.ecrire(CLE_DERNIER_ID, this.dernierId()));
+
+    // Un autre onglet a modifié le catalogue : on relit les données enregistrées
+    this.stockage.surveiller(CLE_EQUIPEMENTS, () =>
+      this.etat.set(this.stockage.lire(CLE_EQUIPEMENTS, EQUIPEMENTS_INITIAUX, estListeEquipements))
+    );
+    this.stockage.surveiller(CLE_DERNIER_ID, () =>
+      this.dernierId.set(this.stockage.lire(CLE_DERNIER_ID, this.plusGrandId(), (v): v is number => typeof v === 'number'))
+    );
   }
 
   trouver(id: number): Equipement | undefined {
