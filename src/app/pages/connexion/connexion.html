@@ -22,4 +22,13 @@
       </li>
     }
   </ul>
+
+  <div class="zone-demo">
+    <button type="button" class="bouton-secondaire" (click)="reinitialiser()">
+      Réinitialiser les données de démonstration
+    </button>
+    @if (messageReinitialisation()) {
+      <p class="alerte alerte-succes" role="status">{{ messageReinitialisation() }}</p>
+    }
+  </div>
 </section>
