@@ -39,6 +39,7 @@ export class Catalogue {
     })),
     { initialValue: '' }
   );
+  // Message lié à l'équipement affiché : il est effacé quand on passe à un autre équipement
   readonly message = signal<Resultat | null>(null);
 
   // Ids des équipements réservés par l'étudiant connecté
@@ -72,8 +73,9 @@ export class Catalogue {
   });
 
   changerFiltres(filtres: { q?: string | null; categorie?: string | null }): void {
-    // Nouvelle recherche : on repart du premier résultat
+    // Nouvelle recherche : on repart du premier résultat, l'ancien message ne concerne plus rien
     this.indice.set(0);
+    this.message.set(null);
     // null retire le paramètre de l'URL ; replaceUrl évite une entrée d'historique à chaque lettre
     this.router.navigate([], {
       relativeTo: this.route,
