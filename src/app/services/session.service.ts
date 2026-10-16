@@ -51,11 +51,22 @@ export class SessionService {
   }
 
   deconnecter(): void {
+    // Les guards ne se relancent pas quand le signal change, il faut donc quitter la page
+    // privée nous-mêmes. On quitte d'abord la page : si un formulaire non enregistré demande
+    // confirmation et que l'utilisateur choisit de rester, il ne doit pas être déconnecté.
+    // (Déjà sur la page de connexion : pas de navigation, on ferme directement la session.)
+    if (this.router.url.startsWith('/login')) {
+      this.fermerSession();
+      return;
+    }
+    this.router.navigateByUrl('/login', { replaceUrl: true }).then(quittee => {
+      if (quittee) this.fermerSession();
+    });
+  }
+
+  private fermerSession(): void {
     this.etat.set(null);
     this.stockage.supprimer(CLE_SESSION);
-    // Les guards ne se relancent pas quand le signal change,
-    // il faut donc quitter la page privée nous-mêmes.
-    this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 
   private restaurer(): Compte | null {
