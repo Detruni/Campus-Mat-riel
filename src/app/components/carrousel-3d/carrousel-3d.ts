@@ -1,5 +1,5 @@
 import {
-  Component, ElementRef, OnDestroy, afterNextRender, effect, inject, input, output, signal, untracked, viewChild
+  Component, ElementRef, OnDestroy, afterNextRender, effect, inject, input, output, signal, viewChild
 } from '@angular/core';
 import { AmbianceService } from '../../services/ambiance.service';
 import { ElementCarrousel, SceneCarrousel } from './scene-carrousel';
@@ -48,26 +48,31 @@ export class Carrousel3d implements OnDestroy {
       // On attend la police des pastilles avant de dessiner les textures
       document.fonts.load('800 64px "Libre Franklin"')
         .catch(() => undefined)
-        .finally(() => this.scene?.afficher(this.elements(), this.indice()));
+        .finally(() => {
+          this.scene?.afficher(this.elements());
+          this.scene?.allerA(this.indice(), true);
+        });
     });
 
-    // La liste a changé (filtre, réservation...) : on redessine les pochettes
-    // (untracked : un simple changement d'indice ne doit pas reconstruire les pochettes,
-    // sinon elles sautent directement à leur place au lieu de glisser)
+    // La liste a changé (filtre, réservation...) : on redessine les pochettes.
+    // Cet effet ne lit que la liste : un simple changement d'indice ne reconstruit pas
+    // les pochettes (sinon elles sauteraient à leur place au lieu de glisser).
     effect(() => {
       const elements = this.elements();
-      untracked(() => {
-        const indice = Math.min(this.indice(), Math.max(elements.length - 1, 0));
-        if (indice !== this.indice()) this.indiceChange.emit(indice);
-        this.scene?.afficher(elements, indice);
-      });
+      this.scene?.afficher(elements);
     });
 
     // L'indice a changé : la scène glisse jusqu'à la bonne pochette et le fond change de couleur
     effect(() => {
-      const indice = this.indice();
+      const elements = this.elements();
+      // Si la liste a raccourci (filtre, annulation...), on revient sur un élément qui existe
+      const indice = Math.min(this.indice(), Math.max(elements.length - 1, 0));
+      if (indice !== this.indice()) {
+        this.indiceChange.emit(indice);
+        return;
+      }
       this.scene?.allerA(indice);
-      const element = this.elements()[indice];
+      const element = elements[indice];
       if (element) this.ambiance.definir(element.fond);
       this.animerCapsule();
     });
