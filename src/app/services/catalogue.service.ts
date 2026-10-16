@@ -76,6 +76,11 @@ export class CatalogueService {
     return { ok: true, message: `« ${equipement.nom} » a été supprimé du catalogue.` };
   }
 
+  // Remet le catalogue de départ (bouton de la page de connexion)
+  reinitialiser(): void {
+    this.etat.set(structuredClone(EQUIPEMENTS_INITIAUX));
+  }
+
   // On prend le plus grand id + 1 (et pas length + 1, qui peut créer des doublons après une suppression)
   private nouvelId(): number {
     return Math.max(100, ...this.etat().map(e => e.id)) + 1;
