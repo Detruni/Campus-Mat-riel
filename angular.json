@@ -50,6 +50,9 @@
               }
             ],
             "styles": [
+              "@fontsource/libre-franklin/400.css",
+              "@fontsource/libre-franklin/600.css",
+              "@fontsource/libre-franklin/800.css",
               "src/styles.css"
             ]
           },
