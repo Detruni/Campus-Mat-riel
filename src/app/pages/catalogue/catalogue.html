@@ -4,6 +4,7 @@
   libelle="Catalogue du matériel"
   [elements]="elements()"
   [(indice)]="indice"
+  (indiceChange)="message.set(null)"
   (ouvrir)="ouvrir($event)"
 >
   <div haut>
