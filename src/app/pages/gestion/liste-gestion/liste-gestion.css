@@ -1,0 +1,49 @@
+.titre-gestion {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.titre-gestion h1 {
+  margin: 0;
+}
+
+/* Permet de faire défiler le tableau sur petit écran */
+.tableau-conteneur {
+  overflow-x: auto;
+  margin-top: 1rem;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--bordure);
+  vertical-align: middle;
+}
+
+th {
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+  background: var(--fond);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+td .actions {
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+}
