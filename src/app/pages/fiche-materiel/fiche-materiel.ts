@@ -1,4 +1,5 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { BadgeDisponibilite } from '../../components/badge-disponibilite/badge-disponibilite';
 import { Carrousel3d } from '../../components/carrousel-3d/carrousel-3d';
@@ -48,6 +49,15 @@ export class FicheMateriel {
     const equipement = this.equipement();
     return equipement ? elementsEquipements([equipement], this.reservations.idsReserves()) : [];
   });
+
+  constructor() {
+    // Le titre de l'onglet reprend le nom de l'équipement affiché
+    const titre = inject(Title);
+    effect(() => {
+      const equipement = this.equipement();
+      titre.setTitle(`${equipement ? equipement.nom : 'Équipement introuvable'} - Campus Matériel`);
+    });
+  }
 
   reserver(equipementId: number): void {
     this.message.set(this.reservations.reserver(equipementId));
