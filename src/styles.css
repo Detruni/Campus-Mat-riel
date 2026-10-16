@@ -408,3 +408,9 @@ textarea::placeholder {
   gap: 0.75rem;
   width: 100%;
 }
+
+/* Titre qui reçoit le focus après un changement de page : pas de cadre à la souris */
+h1:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
