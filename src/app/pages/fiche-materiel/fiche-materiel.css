@@ -1,0 +1,49 @@
+.fiche {
+  padding: 1.5rem;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.fiche-haut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.fiche-haut h1 {
+  margin: 0;
+}
+
+.infos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin: 0 0 1.5rem;
+}
+
+.infos-large {
+  grid-column: 1 / -1;
+}
+
+dt {
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.zone-reservation {
+  padding-top: 1rem;
+  border-top: 1px solid var(--bordure);
+}
+
+.zone-reservation h2 {
+  font-size: 1.15rem;
+  margin-top: 0;
+}
