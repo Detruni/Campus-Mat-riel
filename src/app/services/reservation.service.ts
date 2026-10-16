@@ -48,6 +48,10 @@ export class ReservationService {
     return !this.idsReserves().has(equipementId);
   }
 
+  reinitialiser(): void {
+    this.etat.set(structuredClone(RESERVATIONS_INITIALES));
+  }
+
   reservationDe(equipementId: number): Reservation | undefined {
     return this.etat().find(r => r.equipementId === equipementId);
   }
