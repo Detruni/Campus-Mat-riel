@@ -1,0 +1,71 @@
+<section
+  class="carrousel"
+  aria-roledescription="carrousel"
+  aria-label="Équipements du catalogue"
+  [style.--fond-a]="fond()[0]"
+  [style.--fond-b]="fond()[1]"
+>
+  <div
+    class="scene"
+    #scene
+    tabindex="0"
+    role="group"
+    aria-label="Vue 3D des équipements. Flèches gauche et droite pour changer d'équipement, Entrée pour ouvrir la fiche."
+    (keydown)="clavier($event)"
+    (wheel)="molette($event)"
+  >
+    @if (webglIndisponible()) {
+      <p class="sans-3d">La vue 3D n'est pas disponible sur ce navigateur.</p>
+    }
+  </div>
+
+  @if (courant(); as e) {
+    <div class="capsule">
+      <button
+        type="button"
+        class="fleche"
+        (click)="precedent()"
+        [disabled]="indice() === 0"
+        aria-label="Équipement précédent"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
+      </button>
+
+      <div class="infos" aria-live="polite">
+        <p class="titre">
+          <span class="numero">{{ numero(indice() + 1) }}.</span>{{ e.nom }}
+        </p>
+        <p class="sous-titre">{{ e.categorie }} · {{ e.localisation }}</p>
+      </div>
+
+      <app-badge-disponibilite [disponible]="!reserves().has(e.id)" />
+
+      <button
+        type="button"
+        class="fleche"
+        (click)="suivant()"
+        [disabled]="indice() === equipements().length - 1"
+        aria-label="Équipement suivant"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+      </button>
+    </div>
+
+    <div class="actions-carrousel">
+      <a [routerLink]="['/materiels', e.id]" class="bouton-pilule">Voir la fiche</a>
+      @if (peutReserver()) {
+        @if (mesReservations().has(e.id)) {
+          <p class="note">Vous avez réservé cet équipement.</p>
+        } @else if (!reserves().has(e.id)) {
+          <button type="button" class="bouton-pilule plein" (click)="reserver.emit(e.id)">
+            Réserver <span class="visuellement-cache">{{ e.nom }}</span>
+          </button>
+        } @else {
+          <p class="note">Déjà réservé par un autre étudiant.</p>
+        }
+      }
+    </div>
+
+    <p class="compteur" aria-hidden="true">{{ numero(indice() + 1) }} / {{ numero(equipements().length) }}</p>
+  }
+</section>
