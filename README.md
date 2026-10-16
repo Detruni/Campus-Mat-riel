@@ -144,6 +144,7 @@ src/app/
 │   ├── catalogue.service.ts         Liste du matériel : ajouter, modifier, supprimer
 │   ├── reservation.service.ts       Réservations : réserver, annuler, disponibilité
 │   ├── ambiance.service.ts          Couleurs du fond selon la page ou l'élément affiché
+│   ├── message.service.ts           Message laissé par le formulaire pour la liste de gestion
 │   └── resultat.ts                  Type { ok, message } renvoyé par les actions
 │
 ├── guards/
@@ -151,6 +152,7 @@ src/app/
 │
 ├── components/                      Composants réutilisables
 │   ├── fond-ambiance/               Grand fond coloré en cercles, derrière toutes les pages
+│   ├── capsule-equipement/          Capsule d'un équipement du catalogue (input / output reserver)
 │   ├── carrousel-3d/                Carrousel plein écran réutilisé par plusieurs pages
 │   │   ├── carrousel-3d.ts          Composant Angular : navigation, capsule, clavier (input / output)
 │   │   ├── scene-carrousel.ts       Scène Three.js : pochettes, animation, glisser
@@ -205,6 +207,11 @@ réservations actives, la disponibilité ne peut pas être fausse.
 | `campus-materiel.equipements` | Le catalogue |
 | `campus-materiel.reservations` | Les réservations actives |
 | `campus-materiel.session` | L'id du compte connecté (supprimé à la déconnexion) |
+| `campus-materiel.dernier-id` | Le dernier identifiant attribué à un équipement |
+
+Un nouvel équipement reçoit le dernier identifiant attribué + 1. Ce compteur est enregistré :
+un numéro n'est **jamais réutilisé**, même si l'équipement correspondant a été supprimé
+(identifiant « unique et stable » comme demandé dans le sujet).
 
 - Au démarrage, chaque service lit sa clé. **Si la clé n'existe pas**, on part d'une copie
   (`structuredClone`) des données initiales. Un tableau vide enregistré est gardé tel quel.
@@ -235,13 +242,24 @@ l'élément courant avec `input()`, et prévient la page avec `output()` quand l
 d'élément (`indiceChange`) ou ouvre la pochette du centre (`ouvrir`). Avec ce couple
 `indice` / `indiceChange`, la page peut écrire `[(indice)]="indice"`.
 
-Le contenu de la capsule et de la zone du haut est fourni par la page avec `<ng-content>` : c'est
-donc la page `Catalogue` (le parent) qui affiche les boutons, appelle le service et affiche le message.
+Le contenu de la capsule et de la zone du haut est fourni par la page avec `<ng-content>`
+(on « glisse » du contenu à l'intérieur du composant, comme des enfants HTML).
+
+Dans le catalogue, la capsule est le composant `CapsuleEquipement` : il **reçoit un équipement**
+avec `input()` et **transmet la demande de réservation à son parent** avec `output()`. Il ne réserve
+rien lui-même : c'est la page `Catalogue` qui appelle le service et affiche le message.
 
 ```html
 <app-carrousel-3d [elements]="elements()" [(indice)]="indice" (ouvrir)="ouvrir($event)">
   <div haut> filtres, nombre de résultats, messages </div>
-  <div capsule> nom, disponibilité, Voir la fiche, Réserver </div>
+  <div capsule>
+    <app-capsule-equipement
+      [equipement]="e"
+      [disponible]="reservations.estDisponible(e.id)"
+      [peutReserver]="session.estEtudiant()"
+      (reserver)="reserver($event)"
+    />
+  </div>
 </app-carrousel-3d>
 ```
 
@@ -277,6 +295,15 @@ noirs sur fond clair ou blancs sur les capsules noires, et le focus clavier est 
 de jaune. Si le système demande de réduire les animations, les éléments changent sans animation.
 Sur mobile, la page est empilée : zone du haut, scène 3D, puis capsule.
 
+Après un changement de page, **le focus est placé sur le titre principal** (`h1` avec
+`tabindex="-1"`, comme conseillé dans le cours) : un utilisateur au clavier ou un lecteur d'écran
+repart du début de la nouvelle page. Le titre de l'onglet change à chaque page ; sur la fiche, il
+reprend le nom de l'équipement. Dans le catalogue, le message d'une action (« Réservation
+enregistrée »…) disparaît quand on passe à un autre équipement, pour ne pas prêter à confusion.
+
+La police Libre Franklin est **incluse dans le projet** (paquet `@fontsource/libre-franklin`) :
+l'application s'affiche à l'identique même sans connexion Internet.
+
 ### Formulaire réactif partagé
 
 `FormulaireEquipement` sert à la fois pour `/gestion/nouveau` et `/gestion/:id/modifier` :
@@ -300,7 +327,7 @@ formulaire** en cas d'erreur.
 
 Exemple : Alice clique sur « Réserver » dans la capsule du carrousel, sur l'ordinateur portable 01.
 
-1. **Clic** : `Carrousel3d` émet l'id `101` avec son `output` `reserver`.
+1. **Clic** : `CapsuleEquipement` émet l'id `101` avec son `output` `reserver`.
 2. **Le parent reçoit la demande** : `Catalogue.reserver(101)` appelle `ReservationService.reserver(101)`.
 3. **Contrôles** dans le service :
    - un étudiant est bien connecté ;
@@ -408,8 +435,6 @@ champs en erreur signalés avec `aria-invalid`, titre d'onglet différent pour c
 - **Pas de synchronisation** : les données restent dans le navigateur utilisé. Si l'application est
   ouverte dans deux onglets, une modification faite dans l'un n'apparaît dans l'autre qu'après un
   rechargement.
-- **Identifiants des nouveaux équipements** : l'id est le plus grand id existant + 1. Si on supprime
-  le dernier équipement ajouté, son numéro peut être réutilisé par le suivant.
 - **Pas de dates** : comme demandé dans le sujet, une réservation n'a ni date de début ni date de
   fin, elle dure jusqu'à son annulation.
 - **Déploiement** : une fois le build mis sur un serveur, celui-ci doit renvoyer `index.html` pour
