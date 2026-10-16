@@ -5,6 +5,8 @@ import { Resultat } from './resultat';
 import { StockageService } from './stockage.service';
 
 const CLE_EQUIPEMENTS = 'campus-materiel.equipements';
+// Dernier identifiant attribué : il n'est jamais réutilisé, même après une suppression
+const CLE_DERNIER_ID = 'campus-materiel.dernier-id';
 
 // Données d'un formulaire : tout sauf l'identifiant, qui est géré par le service
 export type DonneesEquipement = Omit<Equipement, 'id'>;
@@ -33,9 +35,15 @@ export class CatalogueService {
   );
   readonly equipements = this.etat.asReadonly();
 
+  // Si aucun compteur n'est enregistré, on part du plus grand id existant
+  private readonly dernierId = signal<number>(
+    this.stockage.lire(CLE_DERNIER_ID, this.plusGrandId(), (v): v is number => typeof v === 'number')
+  );
+
   constructor() {
     // Chaque modification du catalogue est sauvegardée automatiquement
     effect(() => this.stockage.ecrire(CLE_EQUIPEMENTS, this.etat()));
+    effect(() => this.stockage.ecrire(CLE_DERNIER_ID, this.dernierId()));
   }
 
   trouver(id: number): Equipement | undefined {
@@ -79,10 +87,18 @@ export class CatalogueService {
   // Remet le catalogue de départ (bouton de la page de connexion)
   reinitialiser(): void {
     this.etat.set(structuredClone(EQUIPEMENTS_INITIAUX));
+    this.dernierId.set(this.plusGrandId());
   }
 
-  // On prend le plus grand id + 1 (et pas length + 1, qui peut créer des doublons après une suppression)
+  // Nouvel identifiant : le compteur + 1 (et pas length + 1, qui crée des doublons après une suppression).
+  // Le compteur est enregistré, donc un numéro supprimé n'est jamais redonné à un autre équipement.
   private nouvelId(): number {
-    return Math.max(100, ...this.etat().map(e => e.id)) + 1;
+    const id = Math.max(this.dernierId(), this.plusGrandId()) + 1;
+    this.dernierId.set(id);
+    return id;
+  }
+
+  private plusGrandId(): number {
+    return Math.max(100, ...this.etat().map(e => e.id));
   }
 }
