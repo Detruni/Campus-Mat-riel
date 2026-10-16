@@ -1,5 +1,7 @@
 import { Injectable, effect, inject, signal } from '@angular/core';
 import { CATEGORIES, EQUIPEMENTS_INITIAUX, Equipement } from '../data/donnees-initiales';
+import { ReservationService } from './reservation.service';
+import { Resultat } from './resultat';
 import { StockageService } from './stockage.service';
 
 const CLE_EQUIPEMENTS = 'campus-materiel.equipements';
@@ -24,6 +26,7 @@ function estListeEquipements(valeur: unknown): valeur is Equipement[] {
 @Injectable({ providedIn: 'root' })
 export class CatalogueService {
   private readonly stockage = inject(StockageService);
+  private readonly reservations = inject(ReservationService);
 
   private readonly etat = signal<Equipement[]>(
     this.stockage.lire(CLE_EQUIPEMENTS, EQUIPEMENTS_INITIAUX, estListeEquipements)
@@ -54,8 +57,23 @@ export class CatalogueService {
     return true;
   }
 
-  supprimer(id: number): void {
+  supprimer(id: number): Resultat {
+    const equipement = this.trouver(id);
+    if (!equipement) {
+      return { ok: false, message: "Cet équipement n'existe plus." };
+    }
+
+    // Règle métier : on ne supprime pas un équipement qui a une réservation active
+    if (!this.reservations.estDisponible(id)) {
+      return {
+        ok: false,
+        message: `Suppression refusée : « ${equipement.nom} » est actuellement réservé. `
+          + "L'étudiant doit d'abord annuler sa réservation."
+      };
+    }
+
     this.etat.update(liste => liste.filter(e => e.id !== id));
+    return { ok: true, message: `« ${equipement.nom} » a été supprimé du catalogue.` };
   }
 
   // On prend le plus grand id + 1 (et pas length + 1, qui peut créer des doublons après une suppression)

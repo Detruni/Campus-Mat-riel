@@ -1,0 +1,51 @@
+<div class="titre-gestion">
+  <h1>Gestion du catalogue</h1>
+  <a routerLink="/gestion/nouveau" class="bouton">Ajouter un équipement</a>
+</div>
+
+@if (message(); as m) {
+  <p class="alerte" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
+    {{ m.message }}
+  </p>
+}
+
+@if (catalogue.equipements().length === 0) {
+  <p class="alerte alerte-info">Le catalogue est vide. Commencez par ajouter un équipement.</p>
+} @else {
+  <div class="tableau-conteneur">
+    <table>
+      <caption class="visuellement-cache">Liste des équipements du catalogue</caption>
+      <thead>
+        <tr>
+          <th scope="col">Id</th>
+          <th scope="col">Nom</th>
+          <th scope="col">Catégorie</th>
+          <th scope="col">Localisation</th>
+          <th scope="col">État</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of catalogue.equipements(); track e.id) {
+          <tr>
+            <td>{{ e.id }}</td>
+            <td><a [routerLink]="['/materiels', e.id]">{{ e.nom }}</a></td>
+            <td>{{ e.categorie }}</td>
+            <td>{{ e.localisation }}</td>
+            <td><app-badge-disponibilite [disponible]="reservations.estDisponible(e.id)" /></td>
+            <td>
+              <div class="actions">
+                <a [routerLink]="['/gestion', e.id, 'modifier']" class="bouton bouton-secondaire">
+                  Modifier <span class="visuellement-cache">{{ e.nom }}</span>
+                </a>
+                <button type="button" class="bouton-danger" (click)="supprimer(e)">
+                  Supprimer <span class="visuellement-cache">{{ e.nom }}</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
