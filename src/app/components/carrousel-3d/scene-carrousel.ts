@@ -35,6 +35,8 @@ const TAILLE_POCHETTE = 2;
 // Distance entre deux pochettes : assez grande pour qu'elles ne se chevauchent pas
 const ECART = 3.1;
 const ECHELLE_OBJET = 3;
+// Après ce délai sans action (en ms), l'animation s'arrête pour économiser la batterie
+const DELAI_REPOS = 8000;
 
 interface Pochette {
   groupe: THREE.Group;
@@ -71,6 +73,11 @@ export class SceneCarrousel {
   private zoneLibre = { haut: 0, bas: 0 };
   // Position visée par la caméra : elle la rejoint en douceur quand la zone libre change
   private readonly cameraVisee = new THREE.Vector3(0, 0, 8.8);
+
+  // Mise en pause : moment de la dernière action et visibilité du canvas à l'écran
+  private derniereActivite = performance.now();
+  private visible = true;
+  private readonly observateurVisibilite: IntersectionObserver;
 
   constructor(private readonly conteneur: HTMLElement, private readonly rappels: RappelsCarrousel) {
     // Lève une erreur si WebGL n'est pas disponible : le composant affiche alors la liste
@@ -111,6 +118,13 @@ export class SceneCarrousel {
     this.camera.position.set(0, 0, 8.8);
 
     this.brancherEvenements(canvas);
+    // Inutile de dessiner la scène quand elle est hors de l'écran (page défilée sur mobile)
+    this.observateurVisibilite = new IntersectionObserver(([entree]) => {
+      this.visible = entree.isIntersecting;
+      this.reveiller();
+    });
+    this.observateurVisibilite.observe(conteneur);
+
     this.observateur = new ResizeObserver(() => this.redimensionner());
     this.observateur.observe(conteneur);
     this.redimensionner();
@@ -119,7 +133,13 @@ export class SceneCarrousel {
   }
 
   /** Reconstruit les pochettes (appelé quand la liste filtrée ou les disponibilités changent). */
+  // Toute action relance l'animation si elle était en pause
+  reveiller(): void {
+    this.derniereActivite = performance.now();
+  }
+
   afficher(elements: ElementCarrousel[]): void {
+    this.reveiller();
     for (const pochette of this.pochettes) {
       this.scene.remove(pochette.groupe);
       liberer(pochette.groupe);
@@ -137,6 +157,7 @@ export class SceneCarrousel {
    * Renvoie false si on est déjà au bout (la page peut alors défiler normalement).
    */
   defiler(delta: number): boolean {
+    this.reveiller();
     const max = this.pochettes.length - 1;
     if ((delta < 0 && this.indice <= 0) || (delta > 0 && this.indice >= max)) return false;
 
@@ -155,6 +176,7 @@ export class SceneCarrousel {
   }
 
   allerA(indice: number, immediat = false): void {
+    this.reveiller();
     this.indice = indice;
     if (immediat || this.sansAnimation) this.position = indice;
   }
@@ -163,6 +185,7 @@ export class SceneCarrousel {
     this.renderer.setAnimationLoop(null);
     clearTimeout(this.minuteurDefilement);
     this.observateur.disconnect();
+    this.observateurVisibilite.disconnect();
     this.nettoyages.forEach(nettoyer => nettoyer());
     liberer(this.scene);
     this.environnement.dispose();
@@ -239,6 +262,12 @@ export class SceneCarrousel {
     const dt = Math.min(this.horloge.getDelta(), 0.1);
     const temps = this.horloge.getElapsed();
 
+    // Après quelques secondes sans action, la rotation ralentit doucement jusqu'à s'arrêter,
+    // puis on ne redessine plus rien tant que la scène est immobile (économie de batterie).
+    const inactif = performance.now() - this.derniereActivite;
+    const entrain = this.sansAnimation ? 0 : THREE.MathUtils.clamp((DELAI_REPOS - inactif) / 1500, 0, 1);
+    if (!this.visible || (entrain === 0 && this.estImmobile())) return;
+
     // La position rejoint l'indice demandé en ralentissant à l'arrivée
     if (!this.glisse) {
       // Le début d'un geste de molette décale déjà légèrement les pochettes
@@ -264,7 +293,7 @@ export class SceneCarrousel {
       const proximite = Math.min(distance, 1);
       g.position.x = d * ECART;
       g.position.z = -Math.min(distance, 3) * 1.6;
-      g.position.y = Math.sin(temps * 1.2 + i) * (this.sansAnimation ? 0 : 0.03);
+      g.position.y = Math.sin(temps * 1.2 + i) * 0.03 * entrain;
       g.scale.setScalar(1 - proximite * 0.16);
       // Pendant le mouvement les pochettes penchent dans le sens du déplacement, comme des cartes qu'on fait glisser
       g.rotation.y = THREE.MathUtils.clamp(-d * 0.55, -0.9, 0.9) + elan * 0.09;
@@ -274,7 +303,7 @@ export class SceneCarrousel {
       // L'objet du centre tourne doucement sur lui-même
       const auCentre = distance < 0.5;
       if (auCentre && !this.sansAnimation) {
-        pochette.modele.rotation.y += dt * 0.7;
+        pochette.modele.rotation.y += dt * 0.7 * entrain;
       } else {
         // Les autres reviennent doucement de trois quarts
         let angle = pochette.modele.rotation.y % (Math.PI * 2);
@@ -290,6 +319,15 @@ export class SceneCarrousel {
     this.renderer.render(this.scene, this.camera);
   }
 
+  // Plus rien ne bouge : pochettes à leur place, caméra cadrée, aucun geste en cours
+  private estImmobile(): boolean {
+    return !this.glisse
+      && this.accumulation === 0
+      && Math.abs(this.indice - this.position) < 0.002
+      && Math.abs(this.vitesse) < 0.01
+      && this.camera.position.distanceTo(this.cameraVisee) < 0.002;
+  }
+
   private brancherEvenements(canvas: HTMLCanvasElement): void {
     const ecouter = <K extends keyof HTMLElementEventMap>(type: K, action: (e: HTMLElementEventMap[K]) => void) => {
       canvas.addEventListener(type, action);
@@ -297,11 +335,13 @@ export class SceneCarrousel {
     };
 
     ecouter('pointerdown', e => {
+      this.reveiller();
       canvas.setPointerCapture(e.pointerId);
       this.glisse = { x: e.clientX, depart: this.position, deplace: false };
     });
 
     ecouter('pointermove', e => {
+      this.reveiller();
       if (!this.glisse) {
         canvas.style.cursor = this.pochetteSous(e) !== null ? 'pointer' : 'grab';
         return;
@@ -351,6 +391,7 @@ export class SceneCarrousel {
    * La caméra se recule et se décale pour que la pochette du centre tienne dans cet espace.
    */
   cadrer(haut: number, bas: number): void {
+    this.reveiller();
     this.zoneLibre = { haut, bas };
     this.calculerCamera();
   }
@@ -363,6 +404,8 @@ export class SceneCarrousel {
     this.camera.aspect = largeur / hauteur;
     this.camera.updateProjectionMatrix();
     this.calculerCamera();
+    // Le canvas est effacé quand il change de taille : il faut le redessiner
+    this.reveiller();
   }
 
   private calculerCamera(): void {
