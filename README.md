@@ -80,6 +80,15 @@ npm run build
 Les fichiers sont générés dans `dist/campus-materiel/browser`.
 Pour le développement et la démonstration, `npm start` suffit.
 
+### Vérifier la qualité du code
+
+```bash
+npm run lint
+```
+
+Le linter (ESLint avec les règles Angular, dont les règles d'accessibilité des templates) signale
+le code inutilisé et les erreurs courantes. Actuellement : « All files pass linting ».
+
 ---
 
 ## Comptes de démonstration
@@ -148,7 +157,8 @@ src/app/
 │   └── resultat.ts                  Type { ok, message } renvoyé par les actions
 │
 ├── guards/
-│   └── acces.guard.ts               connexionGuard et roleGuard('student' | 'manager')
+│   ├── acces.guard.ts               connexionGuard et roleGuard('student' | 'manager')
+│   └── formulaire.guard.ts          formulaireGuard (canDeactivate) : confirmation avant de quitter
 │
 ├── components/                      Composants réutilisables
 │   ├── fond-ambiance/               Grand fond coloré en cercles, derrière toutes les pages
@@ -226,7 +236,13 @@ un numéro n'est **jamais réutilisé**, même si l'équipement correspondant a 
 - `connexionGuard` vérifie qu'un compte est connecté ; `roleGuard('student')` et
   `roleGuard('manager')` vérifient en plus le rôle. Ils renvoient `true` ou une redirection (`UrlTree`).
 - À la déconnexion, le service redirige lui-même vers `/login`, car un guard ne se relance pas
-  tout seul quand la session change.
+  tout seul quand la session change. La session n'est fermée qu'une fois la page quittée : si un
+  formulaire non enregistré demande confirmation et qu'on choisit de rester, on reste connecté.
+- `formulaireGuard` (**canDeactivate**) protège le formulaire de création / modification : s'il a
+  été modifié sans être enregistré, une confirmation est demandée avant de quitter la page.
+- **Pendant le chargement d'une page** (première ouverture d'une page chargée à la demande), une
+  petite capsule « Chargement de la page… » s'affiche. **Si le chargement échoue** (connexion coupée),
+  un message l'explique et propose de réessayer, au lieu d'un écran blanc.
 - Les pages sont chargées **à la demande** : `loadComponent` pour la connexion, le catalogue, la
   fiche et « Mes réservations » (elles contiennent la 3D), `loadChildren` pour l'espace `/gestion`.
   Le fichier de démarrage reste léger (environ 70 ko compressés) ; Three.js n'est téléchargé
@@ -389,6 +405,13 @@ en haut de la page `/login` (ou vider le `localStorage` dans les outils de déve
   (ou précédent) avec une animation, la capsule et la couleur du fond suivent.
 - **Carrousel au clavier** : cliquer dans la scène (ou y arriver avec Tab), puis utiliser les flèches
   gauche / droite ; `Entrée` ouvre l'élément du centre.
+- **Deux onglets** : ouvrir l'application dans deux onglets avec le même compte étudiant. Réserver dans
+  le premier : la fiche du second passe à « Réservé » sans recharger. Se déconnecter dans le premier :
+  le second revient aussi sur la connexion.
+- **Formulaire non enregistré** : en tant que Camille, ouvrir « Modifier » sur un équipement, changer
+  le nom puis cliquer sur Catalogue : une confirmation est demandée. Annuler : on reste sur le formulaire.
+- **Économie d'énergie** : laisser le catalogue sans y toucher une dizaine de secondes : la rotation
+  ralentit puis s'arrête. Bouger la souris : l'animation reprend.
 
 ---
 
@@ -410,6 +433,11 @@ en haut de la page `/login` (ou vider le `localStorage` dans les outils de déve
 - [x] Liens actifs dans le menu
 - [x] Communication parent / enfant (`input` / `output`) avec le carrousel
 - [x] Direction artistique complète : connexion, catalogue, fiche et réservations en carrousel 3D (Three.js)
+- [x] Indicateur de chargement des pages et message si une page ne peut pas être chargée
+- [x] Confirmation avant de quitter un formulaire non enregistré (`canDeactivate`)
+- [x] Synchronisation entre plusieurs onglets ouverts (événement `storage`)
+- [x] Animation 3D mise en pause au repos ou hors de l'écran (économie de batterie)
+- [x] Linter (`npm run lint`) sans erreur
 - [x] Persistance dans le `localStorage`, données initiales chargées uniquement s'il n'y a rien d'enregistré
 - [x] Messages pour : liste vide, recherche sans résultat, équipement inexistant, accès refusé,
       saisie invalide, équipement déjà réservé, erreur de lecture ou d'écriture du stockage
@@ -432,9 +460,9 @@ champs en erreur signalés avec `aria-invalid`, titre d'onglet différent pour c
 - **Ce n'est pas une vraie sécurité** : la connexion est simulée et les guards ne font que contrôler
   la navigation dans le navigateur. N'importe qui peut modifier le `localStorage`. Dans une vraie
   application, les droits seraient vérifiés par un serveur.
-- **Pas de synchronisation** : les données restent dans le navigateur utilisé. Si l'application est
-  ouverte dans deux onglets, une modification faite dans l'un n'apparaît dans l'autre qu'après un
-  rechargement.
+- **Pas de synchronisation entre ordinateurs** : les données restent dans le navigateur utilisé
+  (comme prévu par le sujet). Entre plusieurs onglets du même navigateur, en revanche, les données
+  et la session sont synchronisées grâce à l'événement `storage`.
 - **Pas de dates** : comme demandé dans le sujet, une réservation n'a ni date de début ni date de
   fin, elle dure jusqu'à son annulation.
 - **Déploiement** : une fois le build mis sur un serveur, celui-ci doit renvoyer `index.html` pour
