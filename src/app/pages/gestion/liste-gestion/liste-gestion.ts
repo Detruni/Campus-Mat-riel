@@ -1,8 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { BadgeDisponibilite } from '../../../components/badge-disponibilite/badge-disponibilite';
 import { Equipement } from '../../../data/donnees-initiales';
 import { CatalogueService } from '../../../services/catalogue.service';
+import { MessageService } from '../../../services/message.service';
 import { ReservationService } from '../../../services/reservation.service';
 import { Resultat } from '../../../services/resultat';
 
@@ -15,12 +16,8 @@ import { Resultat } from '../../../services/resultat';
 export class ListeGestion {
   readonly catalogue = inject(CatalogueService);
   readonly reservations = inject(ReservationService);
-  private readonly router = inject(Router);
-
-  // Message éventuel envoyé par le formulaire après un enregistrement
-  readonly message = signal<Resultat | null>(
-    this.router.currentNavigation()?.extras.state?.['message'] ?? null
-  );
+  // Message éventuel laissé par le formulaire après un enregistrement
+  readonly message = signal<Resultat | null>(inject(MessageService).recuperer());
 
   supprimer(equipement: Equipement): void {
     // Si l'équipement est réservé, inutile de demander confirmation :
