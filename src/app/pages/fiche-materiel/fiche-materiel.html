@@ -25,6 +25,36 @@
         <dd>{{ e.description }}</dd>
       </div>
     </dl>
+
+    @if (session.estEtudiant()) {
+      <section class="zone-reservation" aria-labelledby="titre-reservation">
+        <h2 id="titre-reservation">Réservation</h2>
+
+        @if (maReservation(); as reservation) {
+          <p>Vous avez réservé cet équipement. Il reste à vous jusqu'à l'annulation.</p>
+          <p class="actions">
+            <button type="button" class="bouton-danger" (click)="annuler(reservation.id)">
+              Annuler ma réservation
+            </button>
+            <a routerLink="/mes-reservations" class="bouton bouton-secondaire">Mes réservations</a>
+          </p>
+        } @else if (disponible()) {
+          <p>Cet équipement est disponible.</p>
+          <button type="button" (click)="reserver(e.id)">Réserver cet équipement</button>
+        } @else {
+          <p class="alerte alerte-erreur">
+            Cet équipement est déjà réservé par un autre étudiant :
+            vous ne pouvez pas le réserver tant que sa réservation n'est pas annulée.
+          </p>
+        }
+
+        @if (message(); as m) {
+          <p class="alerte message" [class.alerte-succes]="m.ok" [class.alerte-erreur]="!m.ok" role="status">
+            {{ m.message }}
+          </p>
+        }
+      </section>
+    }
   </article>
 } @else {
   <section class="page-message">
