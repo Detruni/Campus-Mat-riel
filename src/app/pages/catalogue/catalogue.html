@@ -9,7 +9,7 @@
       #champRecherche
       placeholder="Ex. : ordinateur"
       [value]="recherche()"
-      (input)="recherche.set(champRecherche.value)"
+      (input)="changerFiltres({ q: champRecherche.value || null })"
     />
   </div>
 
@@ -18,11 +18,13 @@
     <select
       id="categorie"
       #champCategorie
-      (change)="categorie.set(champCategorie.value)"
+      (change)="changerFiltres({ categorie: champCategorie.value || null })"
     >
-      <option value="" [selected]="categorie() === ''">Toutes les catégories</option>
+      <option value="" [selected]="categorie() === ''">
+        Toutes les catégories ({{ catalogue.equipements().length }})
+      </option>
       @for (c of categories; track c) {
-        <option [value]="c" [selected]="c === categorie()">{{ c }}</option>
+        <option [value]="c" [selected]="c === categorie()">{{ c }} ({{ compteurs()[c] ?? 0 }})</option>
       }
     </select>
   </div>
