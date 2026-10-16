@@ -1,0 +1,37 @@
+<p><a routerLink="/catalogue">&larr; Retour au catalogue</a></p>
+
+@if (equipement(); as e) {
+  <article class="fiche">
+    <div class="fiche-haut">
+      <h1>{{ e.nom }}</h1>
+      <app-badge-disponibilite [disponible]="disponible()" />
+    </div>
+
+    <dl class="infos">
+      <div>
+        <dt>Identifiant</dt>
+        <dd>{{ e.id }}</dd>
+      </div>
+      <div>
+        <dt>Catégorie</dt>
+        <dd>{{ e.categorie }}</dd>
+      </div>
+      <div>
+        <dt>Localisation</dt>
+        <dd>{{ e.localisation }}</dd>
+      </div>
+      <div class="infos-large">
+        <dt>Description</dt>
+        <dd>{{ e.description }}</dd>
+      </div>
+    </dl>
+  </article>
+} @else {
+  <section class="page-message">
+    <h1>Équipement introuvable</h1>
+    <p>Aucun équipement ne correspond à l'identifiant « {{ id() }} ».</p>
+    <p class="actions">
+      <a routerLink="/catalogue" class="bouton">Voir le catalogue</a>
+    </p>
+  </section>
+}
