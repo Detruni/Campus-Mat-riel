@@ -42,6 +42,11 @@ export class ReservationService {
 
   constructor() {
     effect(() => this.stockage.ecrire(CLE_RESERVATIONS, this.etat()));
+
+    // Une réservation faite (ou annulée) dans un autre onglet apparaît ici tout de suite
+    this.stockage.surveiller(CLE_RESERVATIONS, () =>
+      this.etat.set(this.stockage.lire(CLE_RESERVATIONS, RESERVATIONS_INITIALES, estListeReservations))
+    );
   }
 
   estDisponible(equipementId: number): boolean {

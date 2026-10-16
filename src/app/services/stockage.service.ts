@@ -59,6 +59,18 @@ export class StockageService {
     }
   }
 
+  /**
+   * Appelle "action" quand un AUTRE onglet modifie cette clé (événement "storage" du navigateur).
+   * Ça permet de garder plusieurs onglets de l'application à jour sans les recharger.
+   */
+  surveiller(cle: string, action: () => void): void {
+    if (typeof window === 'undefined') return;
+    window.addEventListener('storage', e => {
+      // e.key vaut null quand l'autre onglet a vidé tout le stockage
+      if (e.key === cle || e.key === null) action();
+    });
+  }
+
   fermerErreur(): void {
     this.etatErreur.set(null);
   }
